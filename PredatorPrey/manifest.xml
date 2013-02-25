@@ -1,0 +1,22 @@
+<package>
+  <description brief="PredatorPrey">
+
+     PredatorPrey
+
+  </description>
+  <author>Patrick</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://github.com/pvarin/Olin_AR_Drone/PredatorPrey</url>
+  <depend package="rospy"/>
+  <depend package="opencv2"/>
+  <depend package="tf"/>
+  <depend package="joy"/>
+  <depend package="cv_bridge"/>
+  <depend package="camera_info_manager"/>
+  <depend package="sensor_msgs"/>
+  <depend package="ardrone_autonomy"/>
+
+</package>
+
+
