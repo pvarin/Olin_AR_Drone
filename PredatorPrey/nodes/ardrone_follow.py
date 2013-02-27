@@ -29,9 +29,9 @@ import sys
 import rospy
 import math
 import pid
-import cv2
-import numpy as np
-from cv_bridge import CvBridge, CvBridgeError
+#import cv2
+#import numpy as np
+#from cv_bridge import CvBridge, CvBridgeError
 
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Twist
@@ -57,9 +57,9 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.xPid = pid.Pid2( 0.020, 0.0, 0.0, limit = self.angularZlimit )
-        self.yPid = pid.Pid2( 0.020, 0.0, 0.0, limit = self.linearZlimit )
-        self.zPid = pid.Pid2( 0.050, 0.0, 0.0, limit = self.linearXlimit )
+        self.xPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.angularZlimit )
+        self.yPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.linearZlimit )
+        self.zPid = pid.Pid2( 0.50, 0.0, 0.0, limit = self.linearXlimit )
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -118,6 +118,7 @@ class ArdroneFollow:
         self.current_cmd.linear.z = data.axes[3] * self.linearZlimit
         self.current_cmd.linear.x = data.axes[1] * self.linearXlimit
         self.current_cmd.linear.y = data.axes[0] * self.linearXlimit
+        print self.current_cmd.linear.z
 
         if ( self.current_cmd.linear.x == 0 and
              self.current_cmd.linear.y == 0 and
@@ -164,7 +165,7 @@ class ArdroneFollow:
             self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
             self.current_cmd.linear.z = self.yPid.get_output( 500, self.navdata.tags_yc[0] , dt )
             self.current_cmd.linear.x = self.zPid.get_output( 100, self.navdata.tags_distance[0], dt )
-
+        
         '''if self.auto_cmd == False or self.manual_cmd == True:
             self.setLedAnim( 9 )
             return'''
