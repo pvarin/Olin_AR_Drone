@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import roslib
-roslib.load_manifest('falkor_ardrone')
+roslib.load_manifest('PredatorPrey')
 
 import sys
 import rospy
@@ -40,14 +40,13 @@ from sensor_msgs.msg import Joy, Image
 from ardrone_autonomy.msg import Navdata
 from ardrone_autonomy.srv import LedAnim
 
-TimerDuration = 0.1
 
 class ArdroneFollow:
     def __init__( self ):
 
         self.goal_vel_pub = rospy.Publisher( "goal_vel", Twist )
 
-        self.timer = rospy.Timer( rospy.Duration( TimerDuration ), self.timer_cb, False )
+        self.timer = rospy.Timer( rospy.Duration( 0.1 ), self.timer_cb, False )
 
         self.land_pub = rospy.Publisher( "ardrone/land", Empty )
         self.takeoff_pub = rospy.Publisher( "ardrone/takeoff", Empty )
@@ -60,8 +59,6 @@ class ArdroneFollow:
         self.yPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.linearZlimit )
         self.xPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.angularZlimit )
         self.zPid = pid.Pid2( 5.50, 0.0, 0.0, limit = self.linearXlimit )
-
-        rospy.logdebug('Test')
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -82,7 +79,7 @@ class ArdroneFollow:
                         7: 'Goto Fix Point',
                         8: 'Landing',
                         9: 'Looping' }
-
+        #self.goal_vel_pub.publish( Twist() )
 
     def navdata_cb( self, data ):
         self.navdata = data
