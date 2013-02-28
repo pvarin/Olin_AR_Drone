@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <node name="ardrone_follow" pkg="PredatorPrey" type="ardrone_follow.py" output="screen" />
 
-  <node name="ardrone_control" pkg="PredatorPrey" type="ardrone_control.py" />
+  <node name="ardrone_control" pkg="PredatorPrey" type="ardrone_control.py" output="screen" />
 
   <!--<node name="joy_node" pkg="joy" type="joy_node" >
     <param name="dev" value="/dev/input/js1" />

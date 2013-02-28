@@ -77,18 +77,21 @@ class ArdroneControl:
         cmd.linear.x = self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt )
         cmd.linear.y = self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
 
+        #rospy.logdebug( ( cmd.angular.z, cmd.linear.z, cmd.linear.x, cmd.linear.y ) )
+        rospy.logdebug( 'GOALVEL: ' + ( self.goal_vel.angular.z, self.goal_vel.linear.z, self.goal_vel.linear.x, self.goal_vel.linear.y ).__str__() )
+
         self.cmd_vel_pub.publish( cmd )
 
 def main():
-  rospy.init_node( 'ardrone_control' )
-
+  rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)
+  
   control = ArdroneControl()
   r = rospy.Rate(100)
 
   try:
       while not rospy.is_shutdown():
-          control.update()
-          r.sleep()
+        control.update()
+        r.sleep()
   except KeyboardInterrupt:
     print "Shutting down"
 

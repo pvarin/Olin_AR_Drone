@@ -57,9 +57,11 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.xPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.angularZlimit )
-        self.yPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.linearZlimit )
-        self.zPid = pid.Pid2( 0.50, 0.0, 0.0, limit = self.linearXlimit )
+        self.yPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.linearZlimit )
+        self.xPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.angularZlimit )
+        self.zPid = pid.Pid2( 5.50, 0.0, 0.0, limit = self.linearXlimit )
+
+        rospy.logdebug('Test')
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -68,7 +70,7 @@ class ArdroneFollow:
         self.manual_cmd = False
         self.auto_cmd = True
 
-        self.navdata_sub = rospy.Subscriber( "/ardrone/navdata", Navdata, self.navdata_cb )
+        self.navdata_sub = rospy.Subscriber( "ardrone/navdata", Navdata, self.navdata_cb )
         self.navdata = None
         self.states = { 0: 'Unknown',
                         1: 'Init',
@@ -118,7 +120,6 @@ class ArdroneFollow:
         self.current_cmd.linear.z = data.axes[3] * self.linearZlimit
         self.current_cmd.linear.x = data.axes[1] * self.linearXlimit
         self.current_cmd.linear.y = data.axes[0] * self.linearXlimit
-        print self.current_cmd.linear.z
 
         if ( self.current_cmd.linear.x == 0 and
              self.current_cmd.linear.y == 0 and
@@ -165,7 +166,9 @@ class ArdroneFollow:
             self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
             self.current_cmd.linear.z = self.yPid.get_output( 500, self.navdata.tags_yc[0] , dt )
             self.current_cmd.linear.x = self.zPid.get_output( 100, self.navdata.tags_distance[0], dt )
-        
+
+        rospy.logdebug( 'FOLLOW: '+ ( self.current_cmd.angular.z, self.current_cmd.linear.z, self.current_cmd.linear.x ) )
+
         '''if self.auto_cmd == False or self.manual_cmd == True:
             self.setLedAnim( 9 )
             return'''
@@ -174,7 +177,7 @@ class ArdroneFollow:
 
 
 def main():
-    rospy.init_node( 'ardrone_follow' )
+    rospy.init_node( 'ardrone_follow' , log_level=rospy.DEBUG)
     af = ArdroneFollow()
 
     try:
