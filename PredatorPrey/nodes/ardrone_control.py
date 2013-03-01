@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import roslib
-roslib.load_manifest('falkor_ardrone')
+roslib.load_manifest('PredatorPrey')
 
 import rospy
 from geometry_msgs.msg import Twist

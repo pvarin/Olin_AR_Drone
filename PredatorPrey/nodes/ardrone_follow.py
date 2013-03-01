@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import roslib
-roslib.load_manifest('falkor_ardrone')
+roslib.load_manifest('PredatorPrey')
 
 import sys
 import rospy
@@ -40,19 +40,14 @@ from sensor_msgs.msg import Joy, Image
 from ardrone_autonomy.msg import Navdata
 from ardrone_autonomy.srv import LedAnim
 
-TimerDuration = 0.1
-
-def test_cb(event):
-    rospy.logdebug('Test')
+TimerDuration = .1
 
 class ArdroneFollow:
     def __init__( self ):
 
         self.goal_vel_pub = rospy.Publisher( "goal_vel", Twist )
 
-
         self.timer = rospy.Timer( rospy.Duration( TimerDuration ), self.timer_cb, False )
-        self.testTimer = rospy.Timer( rospy.Duration( TimerDuration ), test_cb, False )
 
         self.land_pub = rospy.Publisher( "ardrone/land", Empty )
         self.takeoff_pub = rospy.Publisher( "ardrone/takeoff", Empty )
@@ -62,11 +57,9 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.yPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.linearZlimit )
-        self.xPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.angularZlimit )
-        self.zPid = pid.Pid2( 5.50, 0.0, 0.0, limit = self.linearXlimit )
-
-        #rospy.logdebug('Test')
+        self.yPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.linearZlimit )
+        self.xPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.angularZlimit )
+        self.zPid = pid.Pid2( 0.50, 0.0, 0.0, limit = self.linearXlimit )
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -87,7 +80,7 @@ class ArdroneFollow:
                         7: 'Goto Fix Point',
                         8: 'Landing',
                         9: 'Looping' }
-
+        #self.goal_vel_pub.publish( Twist() )
 
     def navdata_cb( self, data ):
         self.navdata = data
