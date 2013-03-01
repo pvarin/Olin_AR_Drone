@@ -78,7 +78,7 @@ class ArdroneControl:
         cmd.linear.y = self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
 
         #rospy.logdebug( ( cmd.angular.z, cmd.linear.z, cmd.linear.x, cmd.linear.y ) )
-        rospy.logdebug( 'GOALVEL: ' + ( self.goal_vel.angular.z, self.goal_vel.linear.z, self.goal_vel.linear.x, self.goal_vel.linear.y ).__str__() )
+        #rospy.logdebug( 'GOALVEL: ' + ( self.goal_vel.angular.z, self.goal_vel.linear.z, self.goal_vel.linear.x, self.goal_vel.linear.y ).__str__() )
 
         self.cmd_vel_pub.publish( cmd )
 

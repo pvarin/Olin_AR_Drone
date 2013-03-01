@@ -42,12 +42,17 @@ from ardrone_autonomy.srv import LedAnim
 
 TimerDuration = 0.1
 
+def test_cb(event):
+    rospy.logdebug('Test')
+
 class ArdroneFollow:
     def __init__( self ):
 
         self.goal_vel_pub = rospy.Publisher( "goal_vel", Twist )
 
+
         self.timer = rospy.Timer( rospy.Duration( TimerDuration ), self.timer_cb, False )
+        self.testTimer = rospy.Timer( rospy.Duration( TimerDuration ), test_cb, False )
 
         self.land_pub = rospy.Publisher( "ardrone/land", Empty )
         self.takeoff_pub = rospy.Publisher( "ardrone/takeoff", Empty )
@@ -61,7 +66,7 @@ class ArdroneFollow:
         self.xPid = pid.Pid2( 2.20, 0.0, 0.0, limit = self.angularZlimit )
         self.zPid = pid.Pid2( 5.50, 0.0, 0.0, limit = self.linearXlimit )
 
-        rospy.logdebug('Test')
+        #rospy.logdebug('Test')
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -154,25 +159,19 @@ class ArdroneFollow:
         # (0,0,-1)
         #if ( self.found_time == None or
         #     ( rospy.Time.now() - self.found_time ).to_sec() > 1 ):
-            
+           
         if event.last_real == None:
             dt = 0
         else:
             dt = ( event.current_real - event.last_real ).to_sec()
 
-        if self.navdata.tags_count != 1:
-            self.current_cmd = Twist()
-        else:
-            self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
-            self.current_cmd.linear.z = self.yPid.get_output( 500, self.navdata.tags_yc[0] , dt )
-            self.current_cmd.linear.x = self.zPid.get_output( 100, self.navdata.tags_distance[0], dt )
+        self.current_cmd = Twist()
 
-        rospy.logdebug( 'FOLLOW: '+ ( self.current_cmd.angular.z, self.current_cmd.linear.z, self.current_cmd.linear.x ) )
-
-        '''if self.auto_cmd == False or self.manual_cmd == True:
-            self.setLedAnim( 9 )
-            return'''
-
+        if self.navdata and self.navdata.tags_count == 1:
+                self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
+                self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
+                self.current_cmd.linear.x = self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
+        
         self.goal_vel_pub.publish( self.current_cmd )
 
 
