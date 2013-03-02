@@ -40,7 +40,7 @@ from sensor_msgs.msg import Joy, Image
 from ardrone_autonomy.msg import Navdata
 from ardrone_autonomy.srv import LedAnim
 
-TimerDuration = .1
+TimerDuration = .05
 
 class ArdroneFollow:
     def __init__( self ):
@@ -57,9 +57,9 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.yPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.linearZlimit )
-        self.xPid = pid.Pid2( 0.20, 0.0, 0.0, limit = self.angularZlimit )
-        self.zPid = pid.Pid2( 0.50, 0.0, 0.0, limit = self.linearXlimit )
+        self.yPid = pid.Pid2( 0.0010, 0.0, 0.0)
+        self.xPid = pid.Pid2( 0.0010, 0.0, 0.0)
+        self.zPid = pid.Pid2( 0.0025, 0.0, 0.0)
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -163,8 +163,9 @@ class ArdroneFollow:
         if self.navdata and self.navdata.tags_count == 1:
                 self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
                 self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
-                self.current_cmd.linear.x = self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
+                self.current_cmd.linear.x = -self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
         
+
         self.goal_vel_pub.publish( self.current_cmd )
 
 
