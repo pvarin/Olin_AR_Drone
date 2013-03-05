@@ -13,8 +13,8 @@
 	    <param name="control_yaw" value="1.75" />
 	    <param name="detect_type" value="10" />
 	    <param name="enemy_colors" value="3" />
-	    <param name="detections_select_h" value="32" />
-	    <param name="detections_select_v_hsync" value="128" />
+	    <param name="detections_select_h" value="1" />
+	    <!--param name="detections_select_v_hsync" value="128" /-->
 	    <param name="enemy_without_shell" value="0" />
 	    <param name="do_imu_caliberation" value="false" />
 	    <param name="tf_prefix" value="mydrone" />
@@ -24,4 +24,3 @@
         <rosparam param="cov/imu_or">[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 100000.0]</rosparam>
 	</node>
 </launch>
-
