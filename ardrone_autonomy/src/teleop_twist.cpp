@@ -81,7 +81,7 @@ bool flatTrimCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Respon
     fprintf(stderr, "flatTrimCallback: twist_lock taken\n");
     ardrone_at_set_flat_trim();
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "flatTrimCallback: twist_lock released\n", );
+    fprintf(stderr, "flatTrimCallback: twist_lock released\n");
     fprintf(stderr, "\nFlat Trim Set.\n");
 }
 
