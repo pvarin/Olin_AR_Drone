@@ -52,10 +52,8 @@ bool setLedAnimationCallback(ardrone_autonomy::LedAnim::Request& request, ardron
 {
     LED_ANIMATION_IDS anim_id = ledAnimMap[request.type % 14]; // Don't trick me
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "setLedAnimationCallback: twist_lock taken\n");
     ardrone_at_set_led_animation(anim_id, (float) fabs(request.freq), (uint32_t) abs(request.duration));
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "setLedAnimationCallback: twist_lock released\n");
     response.result = true;
     return true;
 }
@@ -67,10 +65,8 @@ bool setFlightAnimationCallback(ardrone_autonomy::FlightAnim::Request &request, 
     const int anim_duration = (request.duration > 0) ? request.duration : MAYDAY_TIMEOUT[anim_type];
     snprintf(param, sizeof (param), "%d,%d", anim_type, anim_duration);
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "setFlightAnimationCallback: twist_lock taken\n");
     ARDRONE_TOOL_CONFIGURATION_ADDEVENT(flight_anim, param, NULL);
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "setFlightAnimationCallback: twist_lock released\n");
     response.result = true;
     return true;
 }
@@ -78,17 +74,14 @@ bool setFlightAnimationCallback(ardrone_autonomy::FlightAnim::Request &request, 
 bool flatTrimCallback(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "flatTrimCallback: twist_lock taken\n");
     ardrone_at_set_flat_trim();
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "flatTrimCallback: twist_lock released\n", );
     fprintf(stderr, "\nFlat Trim Set.\n");
 }
 
 void cmdVelCallback(const geometry_msgs::TwistConstPtr &msg)
 {
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "cmdVelCallback: twist_lock taken\n");
     // Main 4DOF
     cmd_vel.linear.x  = max(min(-msg->linear.x, 1.0), -1.0);
     cmd_vel.linear.y  = max(min(-msg->linear.y, 1.0), -1.0);
@@ -99,34 +92,27 @@ void cmdVelCallback(const geometry_msgs::TwistConstPtr &msg)
     cmd_vel.angular.x = msg->angular.x;
     cmd_vel.angular.y = msg->angular.y;
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "cmdVelCallback: twist_lock released\n");
 }
 
 void landCallback(const std_msgs::Empty &msg)
 {
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "landCallback: twist_lock taken\n");
     needs_land = true;
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "landCallback: twist_lock released\n");
 }
 
 void resetCallback(const std_msgs::Empty &msg)
 {	
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "resetCallback: twist_lock taken\n");
     needs_reset = true;
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "resetCallback: twist_lock released\n");
 }
 
 void takeoffCallback(const std_msgs::Empty &msg)
 {
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "takeoffCallback: twist_lock taken\n");
     needs_takeoff = true;
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "takeoffCallback: twist_lock released\n", );
 }
 
 C_RESULT open_teleop(void)
@@ -139,7 +125,6 @@ C_RESULT update_teleop(void)
 	// This function *toggles* the emergency state, so we only want to toggle the emergency
 	// state when we are in the emergency state (because we want to get out of it).
     vp_os_mutex_lock(&twist_lock);
-    fprintf(stderr, "update_teleop: twist_lock taken\n");
     if (needs_reset)
     {
         ardrone_tool_set_ui_pad_select(1);
@@ -206,7 +191,6 @@ C_RESULT update_teleop(void)
 
     }
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr,"update_teleop: twist_lock released\n");
 	return C_OK;
 }
 

@@ -21,7 +21,7 @@ Makefile
 # Build results
 /ARDroneLib/FFMPEG/Includes
 /ARDroneLib/FFMPEG/FFMPEG
-/ARDroneLib/Soft/Build/targets_versions
+/ARDroneLib/Soft/Build/
 /ARDroneLib/Soft/Common/generated_custom.h
 /bin
 /build/
