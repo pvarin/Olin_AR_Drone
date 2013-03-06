@@ -126,7 +126,7 @@ void takeoffCallback(const std_msgs::Empty &msg)
     fprintf(stderr, "takeoffCallback: twist_lock taken\n");
     needs_takeoff = true;
     vp_os_mutex_unlock(&twist_lock);
-    fprintf(stderr, "takeoffCallback: twist_lock released\n", );
+    fprintf(stderr, "takeoffCallback: twist_lock released\n");
 }
 
 C_RESULT open_teleop(void)
