@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=/home/patrick/ROS_ws/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg
+
+Name: libavfilter
+Description: FFmpeg video filtering library
+Version: 2.23.0
+Requires: 
+Conflicts:
+Libs: ${libdir}/libavfilter.a -lSDL -lm -pthread -lbz2 -lz 
+Cflags: -I${includedir}

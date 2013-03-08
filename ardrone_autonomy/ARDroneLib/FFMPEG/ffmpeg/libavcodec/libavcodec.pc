@@ -1,0 +1,14 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=/home/patrick/ROS_ws/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg/../../Soft/Build/targets_versions//ffmpeg_x86_64_PROD_MODE_Linux_3.5.0-25-generic_GNU_Linux_usrbingcc_4.6.3
+includedir=/home/patrick/ROS_ws/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg/../Includes
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 53.7.0
+Requires: libavutil = 51.9.1
+Requires.private: 
+Conflicts:
+Libs: -L${libdir} -lavcodec -lSDL -lm -pthread -lbz2 -lz
+Libs.private: 
+Cflags: -I${includedir}

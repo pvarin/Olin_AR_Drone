@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}
+includedir=/home/patrick/ROS_ws/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 51.9.1
+Requires: 
+Conflicts:
+Libs: ${libdir}/libavutil.a -lm
+Cflags: -I${includedir}
