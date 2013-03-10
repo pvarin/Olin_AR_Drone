@@ -35,8 +35,13 @@ import time
 class ArdroneControl:
     def __init__( self ):
         self.nav_sub = rospy.Subscriber( "ardrone/navdata", Navdata, self.callback_navdata )
+        self.takeoff_sub = rospy.Subscriber( "ardrone/takeoff", Empty, self.callback_takeoff )
+        self.land_sub = rospy.Subscriber( "ardrone/land", Empty, self.callback_land )
+        self.reset_sub = rospy.Subscriber( "ardrone/reset", Empty, self.callback_reset )
         self.cmd_vel_pub = rospy.Publisher( "cmd_vel", Twist )
         self.goal_vel_sub = rospy.Subscriber( "goal_vel", Twist, self.callback_goal_vel )
+
+        self.takenOff = False
 
         # gain_p, gain_i, gain_d
         self.linearxpid = pid.Pid2( 0.5, 0.0, 0.5 )
@@ -54,6 +59,15 @@ class ArdroneControl:
         self.vy = data.vy/1e3
         self.vz = data.vz/1e3
 
+    def callback_takeoff( self, foo ):
+        self.takenOff = True
+
+    def callback_land( self, foo ):
+        self.takenOff = False
+
+    def callback_reset( self, foo ):
+        self.takenOff = False
+
         # these accelerations must take into account orientation, so we get acceleration relative
         # to base_stabilized. This does not.
 #        self.ax = (data.ax*9.82)
@@ -61,24 +75,27 @@ class ArdroneControl:
 #        self.az = (data.az - 1.0)*9.82
 
     def update( self ):
-        if self.last_time == None:
-            self.last_time = rospy.Time.now()
-            dt = 0.0
+        if self.takenOff:
+            if self.last_time == None:
+                self.last_time = rospy.Time.now()
+                dt = 0.0
+            else:
+                time = rospy.Time.now()
+                dt = ( time - self.last_time ).to_sec()
+                self.last_time = time
+                
+            cmd = Twist()
+            cmd.angular.y = 0
+            cmd.angular.x = 0
+            cmd.angular.z = self.goal_vel.angular.z
+            cmd.linear.z = self.goal_vel.linear.z
+            cmd.linear.x = self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt )
+            cmd.linear.y = self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
+
+
+            self.cmd_vel_pub.publish( cmd )
         else:
-            time = rospy.Time.now()
-            dt = ( time - self.last_time ).to_sec()
-            self.last_time = time
-            
-        cmd = Twist()
-        cmd.angular.y = 0
-        cmd.angular.x = 0
-        cmd.angular.z = self.goal_vel.angular.z
-        cmd.linear.z = self.goal_vel.linear.z
-        cmd.linear.x = self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt )
-        cmd.linear.y = self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
-
-
-        self.cmd_vel_pub.publish( cmd )
+            return
 
 def main():
   rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)

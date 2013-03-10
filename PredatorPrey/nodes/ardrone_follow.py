@@ -46,12 +46,8 @@ class ArdroneFollow:
     def __init__( self ):
 
         self.goal_vel_pub = rospy.Publisher( "goal_vel", Twist )
-
+        self.led_service = rospy.ServiceProxy( "ardrone/setledanimation", LedAnim )
         self.timer = rospy.Timer( rospy.Duration( TimerDuration ), self.timer_cb, False )
-
-        self.land_pub = rospy.Publisher( "ardrone/land", Empty )
-        self.takeoff_pub = rospy.Publisher( "ardrone/takeoff", Empty )
-        self.reset_pub = rospy.Publisher( "ardrone/reset", Empty )
 
         self.angularZlimit = 3.141592 / 2
         self.linearXlimit = 1.0
@@ -64,9 +60,9 @@ class ArdroneFollow:
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
 
-        self.joy_sub = rospy.Subscriber( "joy", Joy, self.callback_joy )
         self.manual_cmd = False
         self.auto_cmd = True
+        self.lastAnim = -1;
 
         self.navdata_sub = rospy.Subscriber( "ardrone/navdata", Navdata, self.navdata_cb )
         self.navdata = None
@@ -82,62 +78,14 @@ class ArdroneFollow:
                         9: 'Looping' }
         #self.goal_vel_pub.publish( Twist() )
 
+    def setLedAnim( self, animType, freq = 10 ):
+        #if self.lastAnim == type:
+        #    return
+        self.led_service( type = animType, freq = freq, duration = 1 )
+        #self.lastAnim = type
+
     def navdata_cb( self, data ):
         self.navdata = data
-
-    def callback_joy( self, data ):
-        empty_msg = Empty()
-
-        if data.buttons[12] == 1 and self.last_buttons[12] == 0:
-            self.takeoff()
-
-        if data.buttons[14] == 1 and self.last_buttons[14] == 0:
-            self.land()
-
-        if data.buttons[13] == 1 and self.last_buttons[13] == 0:
-            self.reset()
-
-        if data.buttons[15] == 1 and self.last_buttons[15] == 0:
-            self.auto_cmd = not self.auto_cmd
-            self.hover()
-
-        if data.buttons[4] == 1:
-            self.increase_z_setpt()
-
-        if data.buttons[6] == 1:
-            self.decrease_z_setpt()
-
-        self.last_buttons = data.buttons
-
-        # Do cmd_vel
-        self.current_cmd = Twist()
-
-        self.current_cmd.angular.x = self.current_cmd.angular.y = 0
-        self.current_cmd.angular.z = data.axes[2] * self.angularZlimit
-
-        self.current_cmd.linear.z = data.axes[3] * self.linearZlimit
-        self.current_cmd.linear.x = data.axes[1] * self.linearXlimit
-        self.current_cmd.linear.y = data.axes[0] * self.linearXlimit
-
-        if ( self.current_cmd.linear.x == 0 and
-             self.current_cmd.linear.y == 0 and
-             self.current_cmd.linear.z == 0 and
-             self.current_cmd.angular.z == 0 ):
-            self.manual_cmd = False
-        else:
-            self.setLedAnim( 9 )
-            self.manual_cmd = True
-
-        self.goal_vel_pub.publish( self.current_cmd )
-
-    def takeoff( self ):
-        self.takeoff_pub.publish( Empty() )
-
-    def land( self ):
-        self.land_pub.publish( Empty() )
-
-    def reset( self ):
-        self.reset_pub.publish( Empty() )
 
     def hover( self ):
         hoverCmd = Twist()
@@ -152,7 +100,6 @@ class ArdroneFollow:
         # (0,0,-1)
         #if ( self.found_time == None or
         #     ( rospy.Time.now() - self.found_time ).to_sec() > 1 ):
-           
         if event.last_real == None:
             dt = 0
         else:
@@ -164,8 +111,8 @@ class ArdroneFollow:
                 self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
                 self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
                 self.current_cmd.linear.x = -self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
+                self.setLedAnim( 3 )
         
-
         self.goal_vel_pub.publish( self.current_cmd )
 
 

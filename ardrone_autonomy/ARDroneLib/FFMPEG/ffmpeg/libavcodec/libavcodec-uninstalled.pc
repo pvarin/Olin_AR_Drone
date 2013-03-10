@@ -1,7 +1,7 @@
 prefix=
 exec_prefix=
 libdir=${pcfiledir}
-includedir=/home/patrick/ROS_ws/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg
+includedir=/home/eric/groovy_workspace/Olin_AR_Drone/ardrone_autonomy/ARDroneLib/FFMPEG/ffmpeg
 
 Name: libavcodec
 Description: FFmpeg codec library
