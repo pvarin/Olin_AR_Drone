@@ -54,8 +54,8 @@ class ArdroneFollow:
         self.linearZlimit = 2.0
 
         self.yPid = pid.Pid2( 0.0010, 0.0, 0.0)
-        self.xPid = pid.Pid2( 0.0010, 0.0, 0.0)
-        self.zPid = pid.Pid2( 0.0025, 0.0, 0.0)
+        self.xPid = pid.Pid2( 0.0020, 0.0, 0.0)
+        self.zPid = pid.Pid2( 0.0050, 0.0, 0.0)
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -81,8 +81,9 @@ class ArdroneFollow:
     def setLedAnim( self, animType, freq = 10 ):
         #if self.lastAnim == type:
         #    return
-        self.led_service( type = animType, freq = freq, duration = 1 )
+        #self.led_service( type = animType, freq = freq, duration = 1 )
         #self.lastAnim = type
+        pass
 
     def navdata_cb( self, data ):
         self.navdata = data
@@ -112,7 +113,8 @@ class ArdroneFollow:
                 self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
                 self.current_cmd.linear.x = -self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
                 self.setLedAnim( 3 )
-        
+        #else:
+        #    self.setLedAnim( 6 )
         self.goal_vel_pub.publish( self.current_cmd )
 
 

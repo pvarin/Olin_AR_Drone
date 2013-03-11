@@ -38,8 +38,9 @@ class ArdroneControl:
         self.takeoff_sub = rospy.Subscriber( "ardrone/takeoff", Empty, self.callback_takeoff )
         self.land_sub = rospy.Subscriber( "ardrone/land", Empty, self.callback_land )
         self.reset_sub = rospy.Subscriber( "ardrone/reset", Empty, self.callback_reset )
-        self.cmd_vel_pub = rospy.Publisher( "cmd_vel", Twist )
         self.goal_vel_sub = rospy.Subscriber( "goal_vel", Twist, self.callback_goal_vel )
+        self.cmd_vel_pub = rospy.Publisher( "cmd_vel", Twist )
+        
 
         self.takenOff = False
 
@@ -50,6 +51,9 @@ class ArdroneControl:
         self.vx = self.vy = self.vz = self.ax = self.ay = self.az = 0.0
         self.last_time = None
         self.goal_vel = Twist()
+
+        self.last_cmd_vel = Twist()
+        self.cmd_filter_const = .5
 
     def callback_goal_vel( self, data ):
         self.goal_vel = data
@@ -84,18 +88,20 @@ class ArdroneControl:
                 dt = ( time - self.last_time ).to_sec()
                 self.last_time = time
                 
-            cmd = Twist()
-            cmd.angular.y = 0
-            cmd.angular.x = 0
-            cmd.angular.z = self.goal_vel.angular.z
-            cmd.linear.z = self.goal_vel.linear.z
-            cmd.linear.x = self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt )
-            cmd.linear.y = self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
+            self.last_cmd_vel.angular.y = 0
+            self.last_cmd_vel.angular.x = 0
+            self.last_cmd_vel.angular.z = self.filter(self.last_cmd_vel.angular.z, self.goal_vel.angular.z)
+            self.last_cmd_vel.linear.z = self.filter(self.last_cmd_vel.linear.z, self.goal_vel.linear.z)
+            self.last_cmd_vel.linear.x = self.filter(self.last_cmd_vel.linear.x, self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt ))
+            self.last_cmd_vel.linear.y = self.filter(self.last_cmd_vel.linear.y, self.linearypid.update( self.goal_vel.linear.y, self.vy, dt ))
 
 
-            self.cmd_vel_pub.publish( cmd )
+            self.cmd_vel_pub.publish( self.last_cmd_vel )
         else:
             return
+
+    def filter(self,old,new):
+        return old*(1-self.cmd_filter_const) + new*self.cmd_filter_const
 
 def main():
   rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)
