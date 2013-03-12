@@ -50,6 +50,7 @@ class ArdroneControl:
 
         self.vx = self.vy = self.vz = self.ax = self.ay = self.az = 0.0
         self.last_time = None
+        self.last_takeoff = None
         self.goal_vel = Twist()
 
         self.last_cmd_vel = Twist()
@@ -65,6 +66,7 @@ class ArdroneControl:
 
     def callback_takeoff( self, foo ):
         self.takenOff = True
+        self.last_takeoff = rospy.Time.now()
 
     def callback_land( self, foo ):
         self.takenOff = False
@@ -79,7 +81,7 @@ class ArdroneControl:
 #        self.az = (data.az - 1.0)*9.82
 
     def update( self ):
-        if self.takenOff:
+        if self.takenOff and (rospy.Time.now() - self.last_takeoff).to_sec() > 3:
             if self.last_time == None:
                 self.last_time = rospy.Time.now()
                 dt = 0.0
@@ -88,15 +90,22 @@ class ArdroneControl:
                 dt = ( time - self.last_time ).to_sec()
                 self.last_time = time
                 
-            self.last_cmd_vel.angular.y = 0
-            self.last_cmd_vel.angular.x = 0
-            self.last_cmd_vel.angular.z = self.filter(self.last_cmd_vel.angular.z, self.goal_vel.angular.z)
-            self.last_cmd_vel.linear.z = self.filter(self.last_cmd_vel.linear.z, self.goal_vel.linear.z)
-            self.last_cmd_vel.linear.x = self.filter(self.last_cmd_vel.linear.x, self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt ))
-            self.last_cmd_vel.linear.y = self.filter(self.last_cmd_vel.linear.y, self.linearypid.update( self.goal_vel.linear.y, self.vy, dt ))
+            #self.last_cmd_vel.angular.y = 0
+            #self.last_cmd_vel.angular.x = 0
+
+            #self.last_cmd_vel.angular.z = self.goal_vel.angular.z
+            #self.last_cmd_vel.linear.z  = self.goal_vel.linear.z
+            #self.last_cmd_vel.linear.x  = self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt )
+            #rospy.logdebug("I'm here, YEEEEEEHHHHHHHHAAAAAAAAA")
+            #self.last_cmd_vel.linear.y  = 0#self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
+
+            #self.last_cmd_vel.angular.z = self.filter(self.last_cmd_vel.angular.z, self.goal_vel.angular.z)
+            #self.last_cmd_vel.linear.z = self.filter(self.last_cmd_vel.linear.z, self.goal_vel.linear.z)
+            #self.last_cmd_vel.linear.x = self.filter(self.last_cmd_vel.linear.x, self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt ))
+            #self.last_cmd_vel.linear.y = self.filter(self.last_cmd_vel.linear.y, self.linearypid.update( self.goal_vel.linear.y, self.vy, dt ))
 
 
-            self.cmd_vel_pub.publish( self.last_cmd_vel )
+            self.cmd_vel_pub.publish( self.goal_vel )
         else:
             return
 
@@ -107,7 +116,7 @@ def main():
   rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)
   
   control = ArdroneControl()
-  r = rospy.Rate(100)
+  r = rospy.Rate(10)
 
   try:
       while not rospy.is_shutdown():

@@ -40,7 +40,7 @@ from sensor_msgs.msg import Joy, Image
 from ardrone_autonomy.msg import Navdata
 from ardrone_autonomy.srv import LedAnim
 
-TimerDuration = .05
+TimerDuration = .1
 
 class ArdroneFollow:
     def __init__( self ):
@@ -81,9 +81,8 @@ class ArdroneFollow:
     def setLedAnim( self, animType, freq = 10 ):
         #if self.lastAnim == type:
         #    return
-        #self.led_service( type = animType, freq = freq, duration = 1 )
+        self.led_service( type = animType, freq = freq, duration = 1 )
         #self.lastAnim = type
-        pass
 
     def navdata_cb( self, data ):
         self.navdata = data
