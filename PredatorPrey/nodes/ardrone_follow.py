@@ -53,9 +53,9 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.yPid = pid.Pid2( 0.0010, 0.0, 0.0)
+        self.yPid = pid.Pid2( 0.0015, 0.0, 0.0)
         self.xPid = pid.Pid2( 0.0020, 0.0, 0.0)#this one works great!!!
-        self.zPid = pid.Pid2( 0.0030, 0.0, 0.006)
+        self.zPid = pid.Pid2( 0.0010, 0.0, 0.006)
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -77,6 +77,8 @@ class ArdroneFollow:
                         8: 'Landing',
                         9: 'Looping' }
         #self.goal_vel_pub.publish( Twist() )
+        self.navdata_filter_const = .05
+        self.last_tags_distance = 100
 
     def setLedAnim( self, animType, freq = 10 ):
         #if self.lastAnim == type:
@@ -86,6 +88,8 @@ class ArdroneFollow:
 
     def navdata_cb( self, data ):
         self.navdata = data
+        if self.navdata.tags_count > 0:
+            self.last_tags_distance = self.filter(self.last_tags_distance,self.navdata.tags_distance[0])
 
     def hover( self ):
         hoverCmd = Twist()
@@ -110,12 +114,17 @@ class ArdroneFollow:
         if self.navdata and self.navdata.tags_count == 1:
                 self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
                 self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
-                self.current_cmd.linear.x = -self.zPid.update( 100, self.navdata.tags_distance[0], dt )    
+                self.current_cmd.linear.x = -self.zPid.update( 100, self.last_tags_distance, dt )    
                 self.setLedAnim( 3 )
         #else:
         #    self.setLedAnim( 6 )
         self.goal_vel_pub.publish( self.current_cmd )
 
+    def filter(self,old,new):
+        val = old*(1-self.navdata_filter_const) + new*self.navdata_filter_const
+        if abs(val) < 1e-9:
+            val = 0
+        return val
 
 def main():
     rospy.init_node( 'ardrone_follow' , log_level=rospy.DEBUG)

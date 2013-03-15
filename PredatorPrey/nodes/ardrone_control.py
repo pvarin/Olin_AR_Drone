@@ -54,7 +54,7 @@ class ArdroneControl:
         self.goal_vel = Twist()
 
         self.last_cmd_vel = Twist()
-        self.cmd_filter_const = .5
+        self.cmd_filter_const = 1
 
     def callback_goal_vel( self, data ):
         self.goal_vel = data
@@ -99,18 +99,21 @@ class ArdroneControl:
             #rospy.logdebug("I'm here, YEEEEEEHHHHHHHHAAAAAAAAA")
             #self.last_cmd_vel.linear.y  = 0#self.linearypid.update( self.goal_vel.linear.y, self.vy, dt )
 
-            #self.last_cmd_vel.angular.z = self.filter(self.last_cmd_vel.angular.z, self.goal_vel.angular.z)
-            #self.last_cmd_vel.linear.z = self.filter(self.last_cmd_vel.linear.z, self.goal_vel.linear.z)
-            #self.last_cmd_vel.linear.x = self.filter(self.last_cmd_vel.linear.x, self.linearxpid.update( self.goal_vel.linear.x, self.vx, dt ))
-            #self.last_cmd_vel.linear.y = self.filter(self.last_cmd_vel.linear.y, self.linearypid.update( self.goal_vel.linear.y, self.vy, dt ))
+            self.last_cmd_vel.angular.z = self.filter(self.last_cmd_vel.angular.z, self.goal_vel.angular.z)
+            self.last_cmd_vel.linear.z = self.filter(self.last_cmd_vel.linear.z, self.goal_vel.linear.z)
+            self.last_cmd_vel.linear.x = self.filter(self.last_cmd_vel.linear.x, self.goal_vel.linear.x)
+            #self.goal_vel.linear.y = self.filter(self.last_cmd_vel.linear.y, self.linearypid.update( self.goal_vel.linear.y, self.vy, dt ))
 
 
-            self.cmd_vel_pub.publish( self.goal_vel )
+            self.cmd_vel_pub.publish( self.last_cmd_vel )
         else:
             return
 
     def filter(self,old,new):
-        return old*(1-self.cmd_filter_const) + new*self.cmd_filter_const
+        val = old*(1-self.cmd_filter_const) + new*self.cmd_filter_const
+        if abs(val) < 1e-9:
+            val = 0
+        return val
 
 def main():
   rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)
