@@ -12,7 +12,7 @@
         <param name="control_vz_max" value="700" />
 	    <param name="control_yaw" value="1.75" />
 	    <param name="detect_type" value="10" />
-	    <param name="enemy_colors" value="1" />
+	    <param name="enemy_colors" value="3" />
 	    <param name="detections_select_h" value="1" />
 	    <param name="enemy_without_shell" value="0" />
 	    <!--<param name="detections_select_v_hsync" value="128" /> -->
