@@ -40,7 +40,7 @@ from sensor_msgs.msg import Joy, Image
 from ardrone_autonomy.msg import Navdata
 from ardrone_autonomy.srv import LedAnim
 
-TimerDuration = .1
+TimerDuration = .05
 
 class ArdroneFollow:
     def __init__( self ):
@@ -55,7 +55,7 @@ class ArdroneFollow:
 
         self.yPid = pid.Pid2( 0.0010, 0.0, 0.0)
         self.xPid = pid.Pid2( 0.0020, 0.0, 0.0)#this one works great!!!
-        self.zPid = pid.Pid2( 0.0030, 0.0, 0.003)
+        self.zPid = pid.Pid2( 0.0030, 0.0, 0.006)
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
