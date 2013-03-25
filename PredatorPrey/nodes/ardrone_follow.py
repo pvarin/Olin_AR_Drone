@@ -53,9 +53,9 @@ class ArdroneFollow:
         self.linearXlimit = 1.0
         self.linearZlimit = 2.0
 
-        self.yPid = pid.Pid2( 0.0010, 0.0, 0.0)
-        self.xPid = pid.Pid2( 0.0020, 0.0, 0.0)#this one works great!!!
-        self.zPid = pid.Pid2( 0.0005, 0.0005, 0.006)
+        self.yPid = pid.Pid2( 0.001, 0.0, 0.0005)
+        self.xPid = pid.Pid2( 0.002, 0.0, 0.0)
+        self.zPid = pid.Pid2( 0.001, 0.0, 0.001)
 
         self.found_point = Point( 0, 0, -1 )
         self.old_cmd = self.current_cmd = Twist()
@@ -78,7 +78,7 @@ class ArdroneFollow:
                         9: 'Looping' }
         #self.goal_vel_pub.publish( Twist() )
         self.navdata_filter_const = .05
-        self.last_tags_distance = 100
+        self.last_tags_distance = 150
 
     def setLedAnim( self, animType, freq = 10 ):
         #if self.lastAnim == type:
@@ -114,17 +114,8 @@ class ArdroneFollow:
         if self.navdata and self.navdata.tags_count == 1:
             
             self.current_cmd.angular.z = self.xPid.update( 500, self.navdata.tags_xc[0], dt )
-
-            if abs(self.navdata.tags_yc[0] - 500) < 30:
-                self.current_cmd.linear.z = 0
-            else:
-                self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
-
-            if abs(self.last_tags_distance - 100) < 20:
-                self.current_cmd.linear.x = 0
-            else:
-                self.current_cmd.linear.x = -self.zPid.update( 100, self.last_tags_distance, dt )    
-
+            self.current_cmd.linear.z = self.yPid.update( 500, self.navdata.tags_yc[0] , dt )
+            self.current_cmd.linear.x = -self.zPid.update( 100, self.last_tags_distance, dt )    
             self.setLedAnim( 3 )
         #else:
         #    self.setLedAnim( 6 )
