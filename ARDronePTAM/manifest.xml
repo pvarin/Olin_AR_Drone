@@ -1,0 +1,19 @@
+<package>
+  <description brief="ARDronePTAM">
+
+     ARDronePTAM
+
+  </description>
+  <author>Patrick</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ARDronePTAM</url>
+  <depend package="rospy"/>
+  <depend package="camera_info_manager"/>
+  <depend package="sensor_msgs"/>
+  <depend package="ardrone_autonomy"/>
+  <depend package="ptam"/>
+
+</package>
+
+
