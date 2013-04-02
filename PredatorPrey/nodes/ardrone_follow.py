@@ -29,9 +29,10 @@ import sys
 import rospy
 import math
 import pid
-#import cv2
-#import numpy as np
-#from cv_bridge import CvBridge, CvBridgeError
+import cv
+import cv2
+import numpy as np
+from cv_bridge import CvBridge, CvBridgeError
 
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Twist
@@ -44,6 +45,8 @@ TimerDuration = .05
 
 class ArdroneFollow:
     def __init__( self ):
+        self.bridge = CvBridge()
+        cv2.namedWindow( 'AR.Drone Follow', cv2.cv.CV_WINDOW_NORMAL )
 
         self.goal_vel_pub = rospy.Publisher( "goal_vel", Twist )
         self.led_service = rospy.ServiceProxy( "ardrone/setledanimation", LedAnim )
@@ -62,8 +65,11 @@ class ArdroneFollow:
 
         self.manual_cmd = False
         self.auto_cmd = True
-        self.lastAnim = -1;
+        self.lastAnim = -1
 
+        self.frame = None
+
+        self.image_sub = rospy.Subscriber( "/ardrone/front/image_raw", Image, self.image_callback )
         self.navdata_sub = rospy.Subscriber( "ardrone/navdata", Navdata, self.navdata_cb )
         self.navdata = None
         self.states = { 0: 'Unknown',
@@ -97,6 +103,16 @@ class ArdroneFollow:
 
     def hover_cmd_cb( self, data ):
         self.hover()
+
+    def image_callback( self, data):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv( data, "passthrough" )
+        except CvBridgeError, e:
+            print e
+
+        self.frame = np.asarray( cv_image )
+        cv2.imshow( 'AR.Drone Follow', cv2.cvtColor( self.frame, cv.CV_BGR2RGB ) )#convert to BGR to display
+        cv2.waitKey( 1 )
 
     def timer_cb( self, event ):
 

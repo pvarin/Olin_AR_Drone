@@ -8,12 +8,13 @@ from sensor_msgs.msg import Image
 
 class imgEcho(object):
 	def __init__(self):
-		self.imgPublisher = rospy.Publisher( "camera/image_raw", Image )
-		self.imgSubscriber = rospy.Subscriber( "ardrone/front/image_raw", Image, self.echoImageCallback )
+		#self.imgPublisher = rospy.Publisher( "camera/image_raw", Image )
+		#self.imgSubscriber = rospy.Subscriber( "ardrone/front/image_raw", Image, self.echoImageCallback )
+		pass
 
 
 	def echoImageCallback(self,data):
-		self.imgPublisher.publish(data)
+		#self.imgPublisher.publish(data)
 		pass
 
 if __name__ == "__main__":
