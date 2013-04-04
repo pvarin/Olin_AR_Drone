@@ -1,6 +1,6 @@
 gui: True
-ImageSizeX: 752
-ImageSizeY: 480
+ImageSizeX: 640
+ImageSizeY: 360
 ARBuffer_width: 1200
 ARBuffer_height: 900
 WiggleScale: 0.1
@@ -32,9 +32,10 @@ MaxStereoInitLoops: 4
 AutoInitPixel: 20
 
 # --- sample camera calibration  --- 
-Cam_fx: 0.570905
-Cam_fy: 0.893487
-Cam_cx: 0.538077
-Cam_cy: 0.523616
-Cam_s: 0.928057
+
+Cam_fx: 0.782393
+Cam_fy: 1.38995
+Cam_cx: 0.517501
+Cam_cy: 0.477297
+Cam_s: 1.14913
 # -----------------------------------

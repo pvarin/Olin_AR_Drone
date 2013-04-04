@@ -1,9 +1,6 @@
 <launch>
 
   <include file="$(find ardrone_autonomy)/launch/ardrone.launch" />
-  <include file="$(find ptam)/launch/ptam.launch" />
-
-  rosrun image_transport republish 
 
   <node name="test" pkg="ARDronePTAM" type="test.py" output="screen" />
 
