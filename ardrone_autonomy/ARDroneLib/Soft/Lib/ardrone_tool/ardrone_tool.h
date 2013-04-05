@@ -22,6 +22,7 @@ extern float32_t wiimote_ax, wiimote_ay, wiimote_az;
 #endif
 
 extern char wifi_ardrone_ip[];
+extern char wifi_ardrone_ports[];
 extern char root_dir[];
 extern char app_id[];
 extern char app_name[];

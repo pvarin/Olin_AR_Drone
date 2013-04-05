@@ -889,5 +889,3 @@ int main(int argc, char** argv)
     }
     return SUCCEED(res) ? 0 : -1;
 }
-
-
