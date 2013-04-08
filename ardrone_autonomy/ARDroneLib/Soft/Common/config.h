@@ -87,15 +87,28 @@
 
 #define WIFI_PASSKEY            "9F1C3EE11CBA230B27BF1C1B6F"
 
-#define FTP_PORT				5551
-#define AUTH_PORT				5552
+//Allow for changing ports
+#ifndef PORT_H                  //ensures port macros and variables are only declared once
+#define PORT_H
+
+//global custom port variables
+extern int custom_navdata_port;
+extern int custom_video_port;
+extern int custom_at_port;
+extern int custom_control_port;
+
+//set port variables to corresponding macro
+#define FTP_PORT				        5551
+#define AUTH_PORT				        5552
 #define VIDEO_RECORDER_PORT     5553
-#define NAVDATA_PORT            5554
-#define VIDEO_PORT              5555
-#define AT_PORT                 5556
+#define NAVDATA_PORT            custom_navdata_port
+#define VIDEO_PORT              custom_video_port
+#define AT_PORT                 custom_at_port
 #define RAW_CAPTURE_PORT        5557
 #define PRINTF_PORT             5558
-#define CONTROL_PORT            5559
+#define CONTROL_PORT            custom_control_port
+
+#endif
 
 ///////////////////////////////////////////////
 // Wired configuration

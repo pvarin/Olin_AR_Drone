@@ -3,6 +3,7 @@
 
 class ARDroneDriver;
 
+#include <getopt.h>
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <tf/transform_broadcaster.h>
