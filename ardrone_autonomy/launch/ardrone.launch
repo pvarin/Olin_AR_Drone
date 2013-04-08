@@ -14,8 +14,8 @@
 	    <param name="detect_type" value="10" />
 	    <param name="enemy_colors" value="3" />
 	    <param name="detections_select_h" value="1" />
-	    <!--<param name="detections_select_v_hsync" value="128" /> -->
 	    <param name="enemy_without_shell" value="0" />
+	    <!--<param name="detections_select_v_hsync" value="128" /> -->
 	    <param name="do_imu_caliberation" value="false" />
 	    <param name="tf_prefix" value="mydrone" />
         <!-- Covariance Values (3x3 matrices reshaped to 1x9)-->

@@ -122,7 +122,7 @@ C_RESULT ardrone_tool_setup_com( const char* ssid )
   return res;
 }
 
-C_RESULT ardrone_tool_init( const char* ardrone_ip, size_t n, int* wifi_ardrone_ports, AT_CODEC_FUNCTIONS_PTRS *ptrs, const char *appname, const char *usrname, const char *rootdir, const char *flightdir, int flight_storing_size, academy_download_new_media academy_download_new_media_func)
+C_RESULT ardrone_tool_init( const char* ardrone_ip, size_t n, AT_CODEC_FUNCTIONS_PTRS *ptrs, const char *appname, const char *usrname, const char *rootdir, const char *flightdir, int flight_storing_size, academy_download_new_media academy_download_new_media_func)
 {
 	C_RESULT res;
 
@@ -406,7 +406,7 @@ int ardrone_tool_main(int argc, char **argv)
 		for (lastSlashPos = strlen (argv[0])-1; lastSlashPos > 0 && argv[0][lastSlashPos] != '/' && argv[0][lastSlashPos] != '\\'; lastSlashPos--);
 		appname = &argv[0][lastSlashPos+1];
 		ardrone_gen_appid (appname, __SDK_VERSION__, app_id, app_name, sizeof (app_name));
-		res = ardrone_tool_init(wifi_ardrone_ip, strlen(wifi_ardrone_ip), int* wifi_ardrone_ports, NULL, appname, NULL, NULL, NULL, MAX_FLIGHT_STORING_SIZE, NULL);
+		res = ardrone_tool_init(wifi_ardrone_ip, strlen(wifi_ardrone_ip), NULL, appname, NULL, NULL, NULL, MAX_FLIGHT_STORING_SIZE, NULL);
       while( SUCCEED(res) && ardrone_tool_exit() == FALSE )
       {
         res = ardrone_tool_update();

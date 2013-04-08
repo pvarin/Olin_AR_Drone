@@ -2,7 +2,6 @@
 #include "teleop_twist.h"
 #include "video.h"
 #include <signal.h>
-#include <getopt.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 // class ARDroneDriver
@@ -790,17 +789,6 @@ void controlCHandler (int signal)
     ros::shutdown();
     should_exit = 1;    
 }
-
-//generates custom ports
-int ports_prefix_custom (int prefix)
-{
-    int drone_ports[4];
-    drone_ports[0] = 554 + (prefix * 1000);
-    drone_ports[1] = 555 + (prefix * 1000);
-    drone_ports[2] = 556 + (prefix * 1000);
-    drone_ports[3] = 559 + (prefix * 1000);
-    return drone_ports;
-}
 ////////////////////////////////////////////////////////////////////////////////
 // custom_main
 ////////////////////////////////////////////////////////////////////////////////
@@ -809,9 +797,7 @@ int ports_prefix_custom (int prefix)
 int main(int argc, char** argv)
 {
     C_RESULT res = C_FAIL;
-    char *drone_ip_address = NULL;
-    int drone_port_prefix = 0;
-    int drone_ports[4];
+    char * drone_ip_address = NULL;
 
     // We need to implement our own Signal handler instead of ROS to shutdown
     // the SDK threads correctly.
@@ -829,45 +815,19 @@ int main(int argc, char** argv)
     // routine (distributed with ARDrone SDK 2.0 Examples) as well as
     // the ardrone_tool_main function
 
-    //Use getopt to parse command line
-    //Define the expected options
-    static struct option long_options[] = {
-        {"ip",      optional_argument, 0, 'i'},
-        {"ports",   optional_argument, 0, 'p'},
-        {0,         0,                 0, 0  }
-    };
-
-    //Parse command line
-    int opt = 0;
-    int long_index = 0;
-
-    while ((opt = getopt_long(argc, argv, "i::p::", long_options, &long_index)) != 1){
-        switch (opt) {
-            case 'i':
-                drone_ip_address = optarg;
-                printf("using custom ip: %s\n", drone_ip_address);
-                break;
-            case 'p':
-                drone_port_prefix = atoi(optarg);
-                printf("using port prefix: %s\n", drone_port_prefix);
-                drone_ports = ports_prefix_custom(drone_port_prefix);
-                break;
-        }
-    }
-
     // Parse command line for
     // Backward compatibility with `-ip` command line argument
-    // argc--; argv++;
-    // while( argc && *argv[0] == '-' )
-    // {
-    //     if( !strcmp(*argv, "-ip") && ( argc > 1 ) )
-    //     {
-    //         drone_ip_address = *(argv+1);
-    //         printf("Using custom ip address %s\n",drone_ip_address);
-    //         argc--; argv++;
-    //     }
-    //     argc--; argv++;
-    // }
+    argc--; argv++;
+    while( argc && *argv[0] == '-' )
+    {
+        if( !strcmp(*argv, "-ip") && ( argc > 1 ) )
+        {
+            drone_ip_address = *(argv+1);
+            printf("Using custom ip address %s\n",drone_ip_address);
+            argc--; argv++;
+        }
+        argc--; argv++;
+    }
 
     // Configure wifi
     vp_com_wifi_config_t *config = (vp_com_wifi_config_t*)wifi_config();
@@ -876,14 +836,6 @@ int main(int argc, char** argv)
     {
 
         vp_os_memset( &wifi_ardrone_ip[0], 0, ARDRONE_IPADDRESS_SIZE );
-
-        int *wifi_ardrone_ports;
-        wifi_ardrone_ports = (int *)malloc(4 * sizeof(int));
-
-        for(i = 0; i < 4, i++){
-            wifi_ardrone_ports[i] = drone_ports[i];
-            printf("port %d: %d\n", i, wifi_ardrone_ports[i]);
-        }
 
         // TODO: Check if IP is valid
         if(drone_ip_address)
@@ -927,7 +879,7 @@ int main(int argc, char** argv)
         // and finally initialize everything!
         // this will then call our sdk, which then starts the ::run() method of this file as an ardrone client thread
 
-        res = ardrone_tool_init(wifi_ardrone_ip, strlen(wifi_ardrone_ip), wifi_ardrone_ports, NULL, app_name, usr_name, NULL, NULL, MAX_FLIGHT_STORING_SIZE, NULL);
+        res = ardrone_tool_init(wifi_ardrone_ip, strlen(wifi_ardrone_ip), NULL, app_name, usr_name, NULL, NULL, MAX_FLIGHT_STORING_SIZE, NULL);
 
         while( SUCCEED(res) && ardrone_tool_exit() == FALSE )
         {
@@ -937,3 +889,5 @@ int main(int argc, char** argv)
     }
     return SUCCEED(res) ? 0 : -1;
 }
+
+
