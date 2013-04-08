@@ -2,6 +2,7 @@
 #define _ARDRONE_TOOL_H_
 
 #include <ardrone_api.h>
+#include <stdlib.h>
 #include <academy_common.h>
 #include <VP_Os/vp_os_types.h>
 #include <config.h>
@@ -22,7 +23,7 @@ extern float32_t wiimote_ax, wiimote_ay, wiimote_az;
 #endif
 
 extern char wifi_ardrone_ip[];
-extern char wifi_ardrone_ports[];
+extern int* wifi_ardrone_ports;
 extern char root_dir[];
 extern char app_id[];
 extern char app_name[];
@@ -54,7 +55,7 @@ extern bool_t ardrone_tool_parse_cmd_line_custom( const char* cmd ) WEAK;
 
 // This is implemented by the library
 int ardrone_tool_main(int argc, char**argv);
-C_RESULT ardrone_tool_init(const char* ardrone_ip, size_t n,
+C_RESULT ardrone_tool_init(const char* ardrone_ip, size_t n, int* wifi_ardrone_ports,
 		AT_CODEC_FUNCTIONS_PTRS *ptrs, const char *appname,
 		const char *usrname, const char *rootdir, const char *flightdir,
 		int flight_storing_size, academy_download_new_media academy_download_new_media_func);
