@@ -13,6 +13,7 @@
   <depend package="sensor_msgs"/>
   <depend package="ardrone_autonomy"/>
   <depend package="ptam"/>
+  <depend package="std_srvs"/>
 
 </package>
 

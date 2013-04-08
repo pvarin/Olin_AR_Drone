@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find ardrone_autonomy)/launch/ardrone.launch" />
+  <include file="$(find ptam)/launch/ptam.launch" />
+
+  <node name="find_door" pkg="ARDronePTAM" type="find_door.py" output="screen" />
+
+</launch>
