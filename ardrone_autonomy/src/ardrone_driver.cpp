@@ -4,6 +4,7 @@
 #include <signal.h>
 
 //Initialize custom port variables
+int custom_ftp_port     = 5551;
 int custom_navdata_port = 5554;
 int custom_video_port =   5555;
 int custom_at_port =      5556;
@@ -799,6 +800,7 @@ void controlCHandler (int signal)
 
 void setPorts(int prefix)
 {
+    custom_ftp_port     = (prefix*1000) + 551;
     custom_navdata_port = (prefix*1000) + 554;
     custom_video_port   = (prefix*1000) + 555;
     custom_at_port      = (prefix*1000) + 556;

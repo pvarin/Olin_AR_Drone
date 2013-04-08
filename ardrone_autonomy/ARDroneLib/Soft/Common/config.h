@@ -96,9 +96,10 @@ extern int custom_navdata_port;
 extern int custom_video_port;
 extern int custom_at_port;
 extern int custom_control_port;
+extern int custom_ftp_port;
 
 //set port variables to corresponding macro
-#define FTP_PORT				        5551
+#define FTP_PORT				        custom_ftp_port
 #define AUTH_PORT				        5552
 #define VIDEO_RECORDER_PORT     5553
 #define NAVDATA_PORT            custom_navdata_port
