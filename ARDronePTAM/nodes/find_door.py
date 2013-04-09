@@ -8,6 +8,7 @@ import std_srvs.srv
 from std_msgs.msg import String, Empty
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
+from ardrone_autonomy.msg import Navdata
 from cv_bridge import CvBridge, CvBridgeError
 
 class imgEcho:
@@ -43,12 +44,39 @@ class control:
 		self.velPublisher = rospy.Publisher( "cmd_vel", Twist)
 		self.takeoffPublisher = rospy.Publisher( "ardrone/takeoff", Empty)
 		self.landPublisher = rospy.Publisher( "ardrone/land", Empty)
-		
+		self.navdataSubscriber = rospy.Subscriber("ardrone/navdata", Navdata, self.navdata_cb)
+        self.timer = rospy.Timer( rospy.Duration( 0.10 ), self.timer_cb, False )
+
+		self.navdata = None
+		self.linearZlimit = 0.50
+		self.zPid = pid.Pid( 0.020, 0.0, 0.0, self.linearZlimit )
+		self.autoInit = False
 
 		rospy.wait_for_service('ardrone/flattrim')
 		self.flattrim = rospy.ServiceProxy( "ardrone/flattrim", std_srvs.srv.Empty )
 		self.flattrim()
-		# self.takeoffPublisher.publish( Empty )
+
+	def navdata_cb(self, data):
+		self.navdata = data
+
+	def toggleAutoInit(self):
+		self.autoInit = not self.autoInit
+		self.startingHeight = self.navdata.altd
+
+	def timer_cb(self, event):
+		cmd_vel = Twist()
+
+		if event.last_real == None:
+            dt = 0
+        else:
+            dt = ( event.current_real - event.last_real ).to_sec()
+
+		if self.autoInit and abs(self.startingHeight + 800 - self.navdata.altd) > 30:
+			cmd_vel.linear.z = self.zPid.update( self.startingHeight + 800, self.navdata.altd, dt )
+		else:
+			self.toggleAutoInit
+		
+		self.velPublisher.publish( cmd_vel )
 
 
 def main(args):
@@ -56,7 +84,10 @@ def main(args):
   ie = imgEcho()
   rospy.sleep(7)
   c = control()
-  c.takeoffPublisher.publish(Empty)
+  rospy.sleep(1)
+  c.takeoffPublisher.publish(Empty())
+  rospy.sleep(3)
+  c.toggleAutoInit()
 
   try:
     rospy.spin()
