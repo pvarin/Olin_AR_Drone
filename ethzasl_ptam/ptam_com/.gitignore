@@ -3,3 +3,6 @@
 *~
 build
 bin
+src
+srv_gen
+msg_gen
