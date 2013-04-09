@@ -800,12 +800,11 @@ void controlCHandler (int signal)
 
 void setPorts(int prefix)
 {
-    custom_ftp_port     = (prefix*1000) + 551;
-    custom_navdata_port = (prefix*1000) + 554;
-    custom_video_port   = (prefix*1000) + 555;
-    custom_at_port      = (prefix*1000) + 556;
-    custom_control_port = (prefix*1000) + 559;
-
+    custom_ftp_port     = (prefix*100) + 51;
+    custom_navdata_port = (prefix*100) + 54;
+    custom_video_port   = (prefix*100) + 55;
+    custom_at_port      = (prefix*100) + 56;
+    custom_control_port = (prefix*100) + 59;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -829,29 +828,6 @@ int main(int argc, char** argv)
     signal (SIGTERM, &controlCHandler);
     signal (SIGINT, &controlCHandler);
 
-    // Now to setup the drone and communication channels
-    // We do this here because calling ardrone_tool_main uses an old
-    // function initialization and is no longer recommended by parrot
-    // I've based this section off the ControlEngine's initialization
-    // routine (distributed with ARDrone SDK 2.0 Examples) as well as
-    // the ardrone_tool_main function
-
-    // Parse command line for
-    // Backward compatibility with `-ip` command line argument
-    // argc--; argv++;
-    // while( argc && *argv[0] == '-' )
-    // {
-    //     if( !strcmp(*argv, "-ip") && ( argc > 1 ) )
-    //     {
-    //         drone_ip_address = *(argv+1);
-    //         printf("Using custom ip address %s\n",drone_ip_address);
-    //         argc--; argv++;
-    //     }
-    //     argc--; argv++;
-    // }
-
-    //Use getopt to parse command line
-    //Define the expected options
     //Use getopt to parse command line
     //Define the expected options
     struct option long_options[] = {
