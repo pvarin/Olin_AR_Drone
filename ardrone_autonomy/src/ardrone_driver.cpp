@@ -781,12 +781,12 @@ bool ARDroneDriver::imuReCalibCallback(std_srvs::Empty::Request &request, std_sr
 {
     if (!do_caliberation)
     {
-        ROS_WARN("Automatic IMU Caliberation is not active. Activate first using `do_imu_caliberation` parameter");
+        ROS_WARN("Automatic IMU Calibration is not active. Activate first using `do_imu_caliberation` parameter");
         return false;
     }
     else
     {
-        ROS_WARN("Recaliberating IMU, please do not move the drone for a couple of seconds.");
+        ROS_WARN("Recalibrating IMU, please do not move the drone for a couple of seconds.");
         resetCaliberation();
         return true;
     }
