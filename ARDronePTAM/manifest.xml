@@ -9,11 +9,14 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/ARDronePTAM</url>
   <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="pcl_ros"/>
   <depend package="camera_info_manager"/>
   <depend package="sensor_msgs"/>
   <depend package="ardrone_autonomy"/>
   <depend package="ptam"/>
   <depend package="std_srvs"/>
+  <depend package="dynamic_reconfigure"/>
 
 </package>
 

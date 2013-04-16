@@ -4,5 +4,8 @@
   <include file="$(find ptam)/launch/ptam.launch" />
 
   <node name="find_door" pkg="ARDronePTAM" type="find_door.py" output="screen" />
+  <node name="pointcloud_to_pcd" pkg="pcl_ros" type="pointcloud_to_pcd" output="screen">
+  	<remap from="input" to="vslam/pc2" />
+  </node>
 
 </launch>

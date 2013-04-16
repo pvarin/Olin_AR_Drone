@@ -29,7 +29,7 @@ UseKFPixelDist: True
 NoLevelZeroMapPoints: True
 FASTMethod: OAST16
 MaxStereoInitLoops: 4
-AutoInit: True
+AutoInit: False
 AutoInitPixel: 20
 
 # --- sample camera calibration  --- 
