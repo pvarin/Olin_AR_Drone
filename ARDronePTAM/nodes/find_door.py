@@ -93,8 +93,8 @@ def main(args):
   c = control()
   rospy.sleep(1)
   #c.takeoffPublisher.publish(Empty())
-  rospy.sleep(5)
-  c.toggleAutoInit()
+  #rospy.sleep(5)
+  #c.toggleAutoInit()
 
   c.client.update_configuration({"ShowPC":True})
   #c.client.update_configuration({"ExportPC":True})

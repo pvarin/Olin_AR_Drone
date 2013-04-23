@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <dirent.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 // PCL specific includes
@@ -19,6 +21,8 @@ int main (int argc, char** argv)
   // Initialize ROS
   ros::init (argc, argv, "CloudMaster");
   ros::NodeHandle nh;
+  system("exec rm -r /home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/*");
+  
 
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe ("vslam/pc2", 1, cloud_cb);

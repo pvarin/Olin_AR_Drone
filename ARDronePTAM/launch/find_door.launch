@@ -3,9 +3,13 @@
   <include file="$(find ardrone_autonomy)/launch/ardrone.launch" />
   <include file="$(find ptam)/launch/ptam.launch" />
 
+  <node name="CloudMaster" pkg="ARDronePTAM" type="CloudMaster" output="screen" />
   <node name="find_door" pkg="ARDronePTAM" type="find_door.py" output="screen" />
+  <node name="file_management" pkg="ARDronePTAM" type="file_management.py" output="screen" />
   <node name="pointcloud_to_pcd" pkg="pcl_ros" type="pointcloud_to_pcd" output="screen">
   	<remap from="input" to="vslam/pc2" />
+  	<param name="~prefix" value="/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/" />
   </node>
+  
 
 </launch>
