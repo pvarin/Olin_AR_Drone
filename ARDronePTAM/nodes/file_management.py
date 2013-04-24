@@ -26,8 +26,11 @@ class FileManager:
 
 
 	def contains_line(self, readfile, thisline):
-		for line in readfile:
-			if line == thisline:
+		for i, line in enumerate(readfile):
+			if i < 11:
+				print line
+				continue
+			elif line == thisline:
 				return True
 		return False
 
@@ -43,7 +46,6 @@ class FileManager:
 			for dirpath, dirnames, files in os.walk(self.rootdir):
 				old = self.find_oldest(files)
 
-			print old
 			os.rename( os.path.join( self.rootdir, old ), os.path.join( self.rootdir, "master.pcd" ) )
 		# for subdir, dirs, files in os.walk(self.rootdir):
 		#     print "ALL FILES:"
@@ -67,16 +69,19 @@ class FileManager:
 				with open(self.rootdir + "/master.pcd", "r") as readfile:
 					line_buffer = ""
 
-					for i, line in enumerate(infile):
-						if not self.contains_line(readfile, line):
-							line_buffer = line_buffer + line
+					for i, newline in enumerate(infile):
+						if i < 11:
+							continue
+						elif not self.contains_line(readfile, newline):
+							line_buffer = line_buffer + newline
+						else:
+							pass #print "Duplicate Line"
 
 			with open(self.rootdir + "/master.pcd", "a") as outfile:
 				outfile.write(line_buffer)
 
 			os.remove(self.rootdir + "/" + old)
 
-		print self.cb_count
 		self.cb_count += 1
 
 

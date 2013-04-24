@@ -1,0 +1,16 @@
+<package>
+  <description brief="PCLProcessing">
+
+     PCLProcessing
+
+  </description>
+  <author>Eric Westman</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/PCLProcessing</url>
+  <depend package="roscpp"/>
+  <depend package="pcl_ros"/>
+
+</package>
+
+
