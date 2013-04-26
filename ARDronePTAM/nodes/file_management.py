@@ -26,13 +26,7 @@ class FileManager:
 
 
 	def contains_line(self, readfile, thisline):
-		for i, line in enumerate(readfile):
-			if i < 11:
-				print line
-				continue
-			elif line == thisline:
-				return True
-		return False
+		return thisline in readfile
 
 
 	def cloud_cb(self, data):
@@ -62,6 +56,7 @@ class FileManager:
 			            #f.write(newline)
 			        #f.close()
 		else:
+			#print "Start Time: " , rospy.Time.now()
 			for dirpath, dirnames, files in os.walk(self.rootdir):
 				old = self.find_oldest(files)
 
@@ -80,6 +75,7 @@ class FileManager:
 			with open(self.rootdir + "/master.pcd", "a") as outfile:
 				outfile.write(line_buffer)
 
+			#print "End Time: " , rospy.Time.now()
 			os.remove(self.rootdir + "/" + old)
 
 		self.cb_count += 1

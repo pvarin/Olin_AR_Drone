@@ -103,7 +103,7 @@ main (int argc, char** argv)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/Desktop/ArtRoomData.pcd", *cloud) == -1) //* load the file
+  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/Desktop/AllData.pcd", *cloud) == -1) //* load the file
   {
     PCL_ERROR ("Couldn't read file test_pcd.pcd \n");
     return (-1);
