@@ -14,6 +14,7 @@ import rospy
 # Import the messages we're interested in sending and receiving
 from geometry_msgs.msg import Twist  	 # for sending commands to the drone
 from std_msgs.msg import Empty       	 # for land/takeoff/emergency
+from std_srvs.srv import Empty as s_Empty
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 
 # An enumeration of Drone Statuses
@@ -25,20 +26,21 @@ COMMAND_PERIOD = 100 #ms
 
 
 class BasicDroneController(object):
-	def __init__(self):
+	def __init__(self, ns):
 		# Holds the current drone status
+		self.ns = ns
 		self.status = -1
 
 		# Subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
-		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
+		self.subNavdata = rospy.Subscriber(ns+'/ardrone/navdata',Navdata,self.ReceiveNavdata) 
 		
 		# Allow the controller to publish to the /ardrone/takeoff, land and reset topics
-		self.pubLand    = rospy.Publisher('/ardrone/land',Empty)
-		self.pubTakeoff = rospy.Publisher('/ardrone/takeoff',Empty)
-		self.pubReset   = rospy.Publisher('/ardrone/reset',Empty)
+		self.pubLand    = rospy.Publisher(ns+'/ardrone/land',Empty)
+		self.pubTakeoff = rospy.Publisher(ns+'/ardrone/takeoff',Empty)
+		self.pubReset   = rospy.Publisher(ns+'/ardrone/reset',Empty)
 		
 		# Allow the controller to publish to the /cmd_vel topic and thus control the drone
-		self.pubCommand = rospy.Publisher('/cmd_vel',Twist)
+		self.pubCommand = rospy.Publisher(ns+'/cmd_vel',Twist)
 
 		# Setup regular publishing of control packets
 		self.command = Twist()
@@ -46,6 +48,14 @@ class BasicDroneController(object):
 
 		# Land the drone if we are shutting down
 		rospy.on_shutdown(self.SendLand)
+
+	def CallFlattrim(self):
+		rospy.wait_for_service(self.ns+'/ardrone/flattrim')
+		self.Flattrim = rospy.ServiceProxy(self.ns+'/ardrone/flattrim', s_Empty)	
+		try:
+			self.Flattrim()
+		except:
+			print "service did not process req"
 
 	def ReceiveNavdata(self,navdata):
 		# Although there is a lot of data in this packet, we're only interested in the state at the moment	
