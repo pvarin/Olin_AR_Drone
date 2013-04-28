@@ -1,11 +1,11 @@
 <launch>
-    <node name="ptam" pkg="ptam" type="ptam" clear_params="true" output="screen">
+    <node name="ptam" pkg="ptam" type="ptam" clear_params="true" output="log">
 	    <remap from="image" to="$(optenv IMAGE camera/image_raw)" />
         <remap from="pose" to="pose"/>
 	    <rosparam file="$(find ptam)/PtamFixParams.yaml"/>
     </node>
 
-    <node name="ptam_visualizer" pkg="ptam" type="ptam_visualizer" output="screen" />
+    <node name="ptam_visualizer" pkg="ptam" type="ptam_visualizer" output="log" />
 
 </launch>
 

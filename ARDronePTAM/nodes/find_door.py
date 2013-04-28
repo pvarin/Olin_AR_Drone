@@ -37,7 +37,9 @@ class imgEcho:
 		#self.imgPublisher.publish(data)
 
 		try:
-			self.imgPublisher.publish(self.bridge.cv_to_imgmsg(cv_image, "mono8"))
+			newimage = self.bridge.cv_to_imgmsg(cv_image, "mono8")
+			newimage.header.frame_id = 'camera'
+			self.imgPublisher.publish(newimage)
 		except CvBridgeError, e:
 			print e
 

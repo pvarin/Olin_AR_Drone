@@ -5,19 +5,24 @@ import fileinput, sys
 import rospy
 import os, os.path
 from sensor_msgs.msg import PointCloud2
+from std_msgs.msg import Empty
 
 
 class FileManager:
 
 	def __init__(self):
 		self.imgSubscriber = rospy.Subscriber( "vslam/pc2", PointCloud2, self.cloud_cb )
+		self.findPlanePublisher = rospy.Publisher( "findPlane", Empty)
 		self.rootdir='/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data'
 		self.cb_count = 0
+		fileList = os.listdir(self.rootdir)
+		for fileName in fileList:
+ 			os.remove(self.rootdir+"/"+fileName)
 
 	def find_oldest(self, files):
 		filenames = []
 		for filename in files:
-			if filename == 'master.pcd':
+			if filename in ( 'master.pcd', 'outliers.pcd' ):
 				filenames.append(999999999999)
 			else:
 				filenames.append(int(filename[:10]))
@@ -55,6 +60,9 @@ class FileManager:
 			            #newline=doWhatYouWant(line)
 			            #f.write(newline)
 			        #f.close()
+
+			self.findPlanePublisher.publish(Empty())
+
 		else:
 			#print "Start Time: " , rospy.Time.now()
 			for dirpath, dirnames, files in os.walk(self.rootdir):
@@ -67,7 +75,7 @@ class FileManager:
 					for i, newline in enumerate(infile):
 						if i < 11:
 							continue
-						elif not self.contains_line(readfile, newline):
+						elif (not self.contains_line(readfile, newline) ) and (not "e+" in newline):
 							line_buffer = line_buffer + newline
 						else:
 							pass #print "Duplicate Line"
