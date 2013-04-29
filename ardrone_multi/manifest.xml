@@ -1,0 +1,18 @@
+<package>
+  <description brief="ardrone_multi">
+
+     ardrone_multi
+
+  </description>
+  <author>arjun</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/ardrone_multi</url>
+  <depend package="rospy"/>
+  <depend package="roslaunch"/>
+  <depend package="ardrone_autonomy"/>
+  <depend package="joy"/>
+
+</package>
+
+

@@ -116,7 +116,7 @@ class ArdroneControl:
         return val
 
 def main():
-  rospy.init_node( 'ardrone_control' , log_level=rospy.DEBUG)
+  rospy.init_node( 'ardrone_control' )
   
   control = ArdroneControl()
   r = rospy.Rate(10)

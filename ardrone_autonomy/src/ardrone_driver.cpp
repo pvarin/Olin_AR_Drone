@@ -3,6 +3,14 @@
 #include "video.h"
 #include <signal.h>
 
+//Initialize custom port variables
+int custom_ftp_port     = 5551;
+int custom_navdata_port = 5554;
+int custom_video_port =   5555;
+int custom_at_port =      5556;
+int custom_control_port = 5559;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // class ARDroneDriver
 ////////////////////////////////////////////////////////////////////////////////
@@ -773,12 +781,12 @@ bool ARDroneDriver::imuReCalibCallback(std_srvs::Empty::Request &request, std_sr
 {
     if (!do_caliberation)
     {
-        ROS_WARN("Automatic IMU Caliberation is not active. Activate first using `do_imu_caliberation` parameter");
+        ROS_WARN("Automatic IMU Calibration is not active. Activate first using `do_imu_caliberation` parameter");
         return false;
     }
     else
     {
-        ROS_WARN("Recaliberating IMU, please do not move the drone for a couple of seconds.");
+        ROS_WARN("Recalibrating IMU, please do not move the drone for a couple of seconds.");
         resetCaliberation();
         return true;
     }
@@ -789,6 +797,16 @@ void controlCHandler (int signal)
     ros::shutdown();
     should_exit = 1;    
 }
+
+void setPorts(int prefix)
+{
+    custom_ftp_port     = (prefix*100) + 51;
+    custom_navdata_port = (prefix*100) + 54;
+    custom_video_port   = (prefix*100) + 55;
+    custom_at_port      = (prefix*100) + 56;
+    custom_control_port = (prefix*100) + 59;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // custom_main
 ////////////////////////////////////////////////////////////////////////////////
@@ -797,7 +815,9 @@ void controlCHandler (int signal)
 int main(int argc, char** argv)
 {
     C_RESULT res = C_FAIL;
+
     char * drone_ip_address = NULL;
+    int drone_port_prefix = 0;
 
     // We need to implement our own Signal handler instead of ROS to shutdown
     // the SDK threads correctly.
@@ -808,25 +828,42 @@ int main(int argc, char** argv)
     signal (SIGTERM, &controlCHandler);
     signal (SIGINT, &controlCHandler);
 
-    // Now to setup the drone and communication channels
-    // We do this here because calling ardrone_tool_main uses an old
-    // function initialization and is no longer recommended by parrot
-    // I've based this section off the ControlEngine's initialization
-    // routine (distributed with ARDrone SDK 2.0 Examples) as well as
-    // the ardrone_tool_main function
+    //Use getopt to parse command line
+    //Define the expected options
+    struct option long_options[] = {
+        {"ip",      required_argument, NULL, 'i'},
+        {"ports",   required_argument, NULL, 'p'},
+        {0, 0, 0, 0 }
+    };
 
-    // Parse command line for
-    // Backward compatibility with `-ip` command line argument
-    argc--; argv++;
-    while( argc && *argv[0] == '-' )
-    {
-        if( !strcmp(*argv, "-ip") && ( argc > 1 ) )
-        {
-            drone_ip_address = *(argv+1);
-            printf("Using custom ip address %s\n",drone_ip_address);
-            argc--; argv++;
+    //Parse command line
+    int opt = 0;
+
+    while ((opt = getopt_long(argc, argv, ":i:p:", long_options, NULL)) != -1){
+        switch (opt) {
+            case 'i':
+                drone_ip_address = optarg;
+                printf("using custom ip: %s\n", drone_ip_address);
+                break;
+            case 'p':
+                drone_port_prefix = atoi(optarg);
+                printf("using port prefix: %d\n", drone_port_prefix);
+                // drone_ports = ports_prefix_custom(drone_port_prefix);
+                break;
+            case 0:
+                break;
+            case ':':
+                printf("%s: option '%c' requires and argument\n", argv[0], optopt);
+                break;
+            case '?':
+                printf("%s: option '-%c' is invalid: %s\n", argv[0], optopt, optarg);
+                break;
         }
-        argc--; argv++;
+    }
+
+    //Configure ports
+    if(drone_port_prefix != 0){
+        setPorts(drone_port_prefix);
     }
 
     // Configure wifi
@@ -889,5 +926,3 @@ int main(int argc, char** argv)
     }
     return SUCCEED(res) ? 0 : -1;
 }
-
-
