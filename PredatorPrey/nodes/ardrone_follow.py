@@ -125,6 +125,7 @@ class ArdroneFollow:
         else:
             dt = ( event.current_real - event.last_real ).to_sec()
 
+        lastDir = cmp(self.current_cmd.angular.z,0)
         self.current_cmd = Twist()
 
         if self.navdata and self.navdata.tags_count == 1:
@@ -134,8 +135,8 @@ class ArdroneFollow:
             self.current_cmd.linear.x = -self.zPid.update( 100, self.last_tags_distance, dt )    
             self.setLedAnim( 3 )
         else:
-            self.current_cmd.angular.z = 0.01
-            self.setLedAnim( 6 )
+            self.current_cmd.angular.z = 0.01*lastDir
+            #self.setLedAnim( 6 )
         self.goal_vel_pub.publish( self.current_cmd )
 
     def filter(self,old,new):
