@@ -36,7 +36,6 @@ class FileManager:
 
 	def cloud_cb(self, data):
 		if not data.data:
-			print "No points in the point cloud"
 			return
 		
 		if self.cb_count == 0:
@@ -85,6 +84,7 @@ class FileManager:
 
 			#print "End Time: " , rospy.Time.now()
 			os.remove(self.rootdir + "/" + old)
+			self.findPlanePublisher.publish(Empty())
 
 		self.cb_count += 1
 

@@ -27,8 +27,12 @@
 pcl::ModelCoefficients::Ptr planes[10];
 unsigned int text_id = 0;
 int num_planes = 0;
-boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+bool firstCloud = true;
+
 std::vector<double> distances;
+
+// boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
+boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
 
 
 boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
@@ -36,7 +40,7 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<
   // --------------------------------------------
   // -----Open 3D viewer and add point cloud-----
   // --------------------------------------------
-  
+  //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
   viewer->setBackgroundColor (0, 0, 0);
   viewer->addPointCloud<pcl::PointXYZ> (cloud, "sample cloud");
   viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
@@ -109,53 +113,45 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> interactionCustomizationVis
 }
 
 
-void makeVisualizer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud, pcl::ModelCoefficients::Ptr coefficients)
-{
-  //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
-  viewer = simpleVis(cloud);
-  viewer->addPlane (*coefficients, "plane");
-  viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, "plane");
-  while (!viewer->wasStopped ())
-  {
-    viewer->spinOnce (100);
-    boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-  }
+// void makeVisualizer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud, pcl::ModelCoefficients::Ptr coefficients)
+// {
+//   //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
+//   // viewer = simpleVis(cloud);
+//   viewer->addPlane (*coefficients, "plane");
+//   viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, "plane");
+//   visSpinningFlag = true;
+//   dataReadyFlag = false;
+//   while (!viewer->wasStopped () && !dataReadyFlag)
+//   {
+//     viewer->spinOnce (100);
+//     boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+//   }
+//   visSpinningFlag = false;
+// }
 
+void addPlanetoViewer(pcl::ModelCoefficients::Ptr coefficients)
+{
+  char buff[7];
+  sprintf(buff, "plane%d", num_planes);
+  viewer->addPlane(*coefficients, buff);
+  viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, buff); 
 }
 
-
-void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
+void addCloudtoViewer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>), cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr outliers (new pcl::PointCloud<pcl::PointXYZ>), cloud_p (new pcl::PointCloud<pcl::PointXYZ>);
+  viewer->addPointCloud<pcl::PointXYZ> (cloud, "cloud");
+  // viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "cloud");
+  viewer->initCameraParameters ();
+}
 
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/master.pcd", *cloud) == -1) //* load the file
-  {
-    PCL_ERROR ("Couldn't read file master_pcd.pcd \n");
-    return;
-  }
+void updateCloudViewer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
+{
+  viewer->updatePointCloud<pcl::PointXYZ> (cloud, "cloud");
+}
 
-  float sum;
-  for (int i = 0; i < 10; i++)
-  {
-    if (i <= num_planes)
-    {
-      break;
-    }
-    for (int point = 0; point < cloud->points.size(); point++)
-    {
-      sum = ((float) cloud->points[0])*((float) (planes[i]->values[0])) + ((float) cloud->points[1])*((float) (planes[i]->values[1])) + ((float) cloud->points[2])*((float) (planes[i]->values[2])) + ((float) (planes[i]->values[3]));
-    }
-  }
-
-
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *outliers) == -1) //* load the file
-  {
-    PCL_ERROR ("Couldn't read file outliers.pcd \n");
-  }
-
-  *cloud += *outliers;
-
+void findPlaneModels(pcl::PointCloud<pcl::PointXYZ>::Ptr outliercloud)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_f (new pcl::PointCloud<pcl::PointXYZ>), cloud_p (new pcl::PointCloud<pcl::PointXYZ>);
   //////////////////Set plane segmentation parameters//////////////////
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
   // Create the segmentation object
@@ -169,13 +165,14 @@ void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
   seg.setDistanceThreshold (0.1);
 
 
-  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
 
-  while (cloud->points.size () > 100)
+  while (outliercloud->points.size () > 30)
   {
     // Segment the largest planar component from the remaining cloud
-    seg.setInputCloud (cloud->makeShared());
+    seg.setInputCloud (outliercloud->makeShared());
     seg.segment (*inliers, *coefficients);
   
     if (inliers->indices.size () == 0)
@@ -184,33 +181,126 @@ void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
       break;
     }
 
-    num_planes++;
-    if (num_planes < 10)
+    if (num_planes != 0)
     {
-      planes[num_planes-1] = coefficients;
+      for (int i = 0; i < num_planes; i++)
+      {
+        if ( planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2] )
+        {
+          planes[num_planes] = coefficients;
+          num_planes++;
+          addPlanetoViewer(coefficients);
+        }
+      }
     }
+    else
+    {
+      planes[num_planes] = coefficients;
+      num_planes++;
+      addPlanetoViewer(coefficients);
+    }
+
     
-    extract.setInputCloud (cloud);
+    extract.setInputCloud (outliercloud);
     extract.setIndices (inliers);
     extract.setNegative (false);
     extract.filter (*cloud_p);
+  
 
     // Create the filtering object
     extract.setNegative (true);
     extract.filter (*cloud_f);
-    cloud.swap (cloud_f);
+    outliercloud.swap (cloud_f);
   }
 
+  return;
+}
+  
+
+
+void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr outliers (new pcl::PointCloud<pcl::PointXYZ>), outliercloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/master.pcd", *cloud) == -1) //* load the file
+  {
+    PCL_ERROR ("Couldn't read file master_pcd.pcd \n");
+    return;
+  }
+
+  if (num_planes == 0)
+  {
+    *outliercloud += *cloud;
+    findPlaneModels(outliercloud);
+  }
+  else
+  {
+    float distance; 
+    pcl::PointIndices::Ptr outlierindices (new pcl::PointIndices ());
+
+    for (int point = 0; (point < cloud->points.size()) && (num_planes > 0) ; point++)
+    {
+      for (int i = 0; i < num_planes; i++)
+      {
+        distance = fabs(( cloud->points[0].x)*( (planes[i]->values[0])) + ( cloud->points[1].y)*( (planes[i]->values[1])) + ( cloud->points[2].z)*( (planes[i]->values[2])) + ((float) (planes[i]->values[3])));
+        std::cerr << "Distance: " << distance << std::endl;
+        if (distance < 0.1) 
+        {
+          outlierindices->indices.push_back(point);
+          break;
+        }
+      }
+    }
+
+    pcl::ExtractIndices<pcl::PointXYZ> extract;
+    extract.setInputCloud (cloud);
+    extract.setIndices (outlierindices);
+    extract.setNegative (false);
+    extract.filter (*outliercloud);
+
+    std::cerr << "OutlierCloudSize: " << outliercloud->points.size() << std::endl;
+
+    if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *outliers) == -1) //* load the file
+    {
+      PCL_ERROR ("Couldn't read file outliers.pcd \n");
+    }
+
+    *outliercloud += *outliers;
+    findPlaneModels(outliercloud);
+  }
+
+  
+
+  if (firstCloud)
+  {
+    firstCloud = false;
+    addCloudtoViewer(outliercloud);
+  }
+  else
+  {
+    updateCloudViewer(outliercloud);
+  }
+  
   pcl::PCDWriter writer;
   
-  if ( writer.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *cloud) == -1)
+  if ( writer.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *outliercloud) == -1)
   {
     PCL_ERROR("Could not write to file.");
     return;
   }
 
-  makeVisualizer(cloud, coefficients);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr emptycloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointXYZ dummy (0.0, 0.0, 0.0);
+  emptycloud->push_back(dummy);
+  writer.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/master.pcd", *emptycloud);
 
+}
+
+void timerCallback(const ros::TimerEvent& e)
+{
+  viewer->spinOnce (100);
+  //boost::this_thread::sleep (boost::posix_time::microseconds (100000));
 }
 
 
@@ -223,7 +313,15 @@ main (int argc, char** argv)
   ros::init(argc, argv, "point_processor");
   ros::NodeHandle n;
   ros::Subscriber sub = n.subscribe("findPlane", 1, findPlaneCallback);
+  ros::Duration(2).sleep();
+  pcl::PCDWriter w;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr blank (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointXYZ dummy (0.0, 0.0, 0.0);
+  blank->push_back(dummy);
+  w.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *blank);
 
+  ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
+  
   ros::spin();
 
 }
