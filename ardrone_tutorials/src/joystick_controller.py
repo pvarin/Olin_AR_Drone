@@ -79,25 +79,30 @@ if __name__=='__main__':
 	ScaleZ          = float ( rospy.get_param("~ScaleZ",ScaleZ) )
 
 	# Now we construct our Qt Application and associated controllers and windows
-	app = QtGui.QApplication(sys.argv)
-	display = DroneVideoDisplay(ns='bravo')
+	# app = QtGui.QApplication(sys.argv)
+	# display = DroneVideoDisplay(ns='alpha')
 
 	print NameSpaces, type(NameSpaces)
 
 	controllerList = []
 	for ns in NameSpaces:
+		# print ns
 		controllerList.append(BasicDroneController(ns))
 
-	subJoyList = []
+	# subJoyList = []
 	# subscribe to the /joy topic and handle messages of type Joy with the function ReceiveJoystickMessage
-	for idx, controllers in enumerate(controllerList):
-		subJoyList.append(rospy.Subscriber('j'+str(idx)+'/joy', Joy, ReceiveJoy, controllers))
-	
-	# executes the QT application
-	display.show()
-	status = app.exec_()
+	# for idx, controllers in enumerate(controllerList):
+	# 	subJoyList.append(rospy.Subscriber('j'+str(idx)+'/joy', Joy, ReceiveJoy, controllers))
 
+	rospy.Subscriber('j0/joy', Joy, ReceiveJoy, controllerList[0])
+	rospy.Subscriber('j1/joy', Joy, ReceiveJoy, controllerList[1])
+	rospy.Subscriber('j2/joy', Joy, ReceiveJoy, controllerList[2])
+
+	# executes the QT application
+	# display.show()
+	# status = app.exec_()
+	print("you are good!")
 	# and only progresses to here once the application has been shutdown
-	# rospy.spin()
+	rospy.spin()
 	rospy.signal_shutdown('Great Flying!')
-	sys.exit(status)
+	# sys.exit(status)
