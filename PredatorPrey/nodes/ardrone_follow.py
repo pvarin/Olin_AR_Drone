@@ -144,7 +144,7 @@ class ArdroneFollow:
         return val
 
 def main():
-    rospy.init_node( 'ardrone_follow' , log_level=rospy.DEBUG)
+    rospy.init_node( 'ardrone_follow' )
     af = ArdroneFollow()
 
     try:

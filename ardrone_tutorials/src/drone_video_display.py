@@ -46,7 +46,7 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 	DisconnectedMessage = 'Disconnected'
 	UnknownMessage = 'Unknown Status'
 	
-	def __init__(self):
+	def __init__(self, ns):
 		# Construct the parent class
 		super(DroneVideoDisplay, self).__init__()
 
@@ -56,10 +56,10 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 		self.setCentralWidget(self.imageBox)
 
 		# Subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
-		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
+		self.subNavdata = rospy.Subscriber(ns+'/ardrone/navdata',Navdata,self.ReceiveNavdata) 
 		
 		# Subscribe to the drone's video feed, calling self.ReceiveImage when a new frame is received
-		self.subVideo   = rospy.Subscriber('/ardrone/image_raw',Image,self.ReceiveImage)
+		self.subVideo   = rospy.Subscriber(ns+'/ardrone/image_raw',Image,self.ReceiveImage)
 		
 		# Holds the image frame received from the drone and later processed by the GUI
 		self.image = None

@@ -56,24 +56,6 @@ def ReceiveJoy(data, controller):
 	else:
 		controller.SetCommand(data.axes[AxisRoll]/ScaleRoll,data.axes[AxisPitch]/ScalePitch,data.axes[AxisYaw]/ScaleYaw,data.axes[AxisZ]/ScaleZ)
 
-# def ReceiveJoystickMessage(data):
-# 	if data.buttons[ButtonEmergency]==1:
-# 		rospy.loginfo("Emergency Button Pressed")
-# 		for controller in controllerList:
-# 			controller.SendEmergency()
-# 	elif data.buttons[ButtonLand]==1:
-# 		rospy.loginfo("Land Button Pressed")
-# 		for controller in controllerList:
-# 			controller.SendLand()
-# 	elif data.buttons[ButtonTakeoff]==1:
-# 		rospy.loginfo("Takeoff Button Pressed")
-# 		for controller in controllerList:
-# 			controller.SendTakeoff()
-# 	else:
-# 		for controller in controllerList:
-# 			controller.SetCommand(data.axes[AxisRoll]/ScaleRoll,data.axes[AxisPitch]/ScalePitch,data.axes[AxisYaw]/ScaleYaw,data.axes[AxisZ]/ScaleZ)
-
-
 # Setup the application
 if __name__=='__main__':
 	import sys
@@ -82,6 +64,7 @@ if __name__=='__main__':
 
 	# Next load in the parameters from the launch-file
 	NameSpaces      = rospy.get_param("~NameSpaces", NameSpaces).replace(' ','').strip('[]').split(',')
+
 	ButtonFlattrim  = int (   rospy.get_param("~ButtonFlattrim",ButtonFlattrim) )
 	ButtonEmergency = int (   rospy.get_param("~ButtonEmergency",ButtonEmergency) )
 	ButtonLand      = int (   rospy.get_param("~ButtonLand",ButtonLand) )
@@ -97,7 +80,7 @@ if __name__=='__main__':
 
 	# Now we construct our Qt Application and associated controllers and windows
 	app = QtGui.QApplication(sys.argv)
-	display = DroneVideoDisplay()
+	display = DroneVideoDisplay(ns='bravo')
 
 	print NameSpaces, type(NameSpaces)
 
@@ -105,14 +88,16 @@ if __name__=='__main__':
 	for ns in NameSpaces:
 		controllerList.append(BasicDroneController(ns))
 
+	subJoyList = []
 	# subscribe to the /joy topic and handle messages of type Joy with the function ReceiveJoystickMessage
-	subJoystick0 = rospy.Subscriber('j0/joy', Joy, ReceiveJoy, controllerList[0])
-	subJoystick1 = rospy.Subscriber('j1/joy', Joy, ReceiveJoy, controllerList[1])
+	for idx, controllers in enumerate(controllerList):
+		subJoyList.append(rospy.Subscriber('j'+str(idx)+'/joy', Joy, ReceiveJoy, controllers))
 	
 	# executes the QT application
 	display.show()
 	status = app.exec_()
 
 	# and only progresses to here once the application has been shutdown
+	# rospy.spin()
 	rospy.signal_shutdown('Great Flying!')
 	sys.exit(status)
