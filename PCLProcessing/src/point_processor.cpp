@@ -100,18 +100,18 @@ void findPlaneModels()
   seg.setModelType (pcl::SACMODEL_PLANE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (1000);
-  seg.setDistanceThreshold (0.1);
+  seg.setDistanceThreshold (0.2);
 
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
   pcl::ExtractIndices<pcl::PointXYZ> extract;
 
-  while (outliercloud->points.size () >= 50)
+  while (outliercloud->points.size () >= 20)
   { 
     // Segment the largest planar component from the remaining cloud
-    seg.setInputCloud (outliercloud->makeShared());
+    seg.setInputCloud (outliercloud);
     seg.segment (*inliers, *coefficients);
     
-    if (inliers->indices.size () <= 50)
+    if (inliers->indices.size () < 20)
     {//throw away junk planes
       PCL_ERROR ("Could not estimate a planar model for the given dataset.\n");
       std::cerr << "The plane that it found contained " << inliers->indices.size() << " points" << std::endl;
@@ -123,9 +123,8 @@ void findPlaneModels()
       int temp = planes.size();
       for (int i = 0; i < temp; i++)
       {
-        if ( (fabs(planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2]) < 0.05) && (fabs(planes[i]->values[3] - coefficients->values[3]) < 0.05))
+        if ( (fabs(planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2]) < 0.05) && (fabs(planes[i]->values[3] - coefficients->values[3]) > 0.05))
         {
-          std::cerr << "Coefficient Magnitude: " << coefficients->values[0]*coefficients->values[0] + coefficients->values[1]*coefficients->values[1] + coefficients->values[2]*coefficients->values[2] << std::endl;
           std::cerr << "Numplanes: " << planes.size() << " DotProduct: " << fabs(planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2]) << " Plane Distance: "<< fabs(planes[i]->values[3] - coefficients->values[3]) <<std::endl;
           planes.push_back(coefficients);
           addPlanetoViewer(coefficients);
@@ -199,7 +198,7 @@ void findPlaneCallback(const sensor_msgs::PointCloud2ConstPtr& input)
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud (cloud);
     extract.setIndices (outlierindices);
-    extract.setNegative (true);
+    extract.setNegative (false);
     extract.filter (*outliers);
 
     *outliercloud += *outliers;
@@ -222,7 +221,7 @@ void findPlaneCallback(const sensor_msgs::PointCloud2ConstPtr& input)
 
 void timerCallback(const ros::TimerEvent& e)
 {
-  viewer->spinOnce (100);
+  viewer->spinOnce (49);
   //boost::this_thread::sleep (boost::posix_time::microseconds (100000));
 }
 
@@ -235,14 +234,7 @@ main (int argc, char** argv)
 {
   ros::init(argc, argv, "point_processor");
   ros::NodeHandle n;
-  // ros::Subscriber sub = n.subscribe("findPlane", 1, findPlaneCallback);
   ros::Subscriber sub = n.subscribe("vslam/pc2", 1, findPlaneCallback);
-  ros::Duration(2).sleep();
-  pcl::PCDWriter w;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr blank (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointXYZ dummy (0.0, 0.0, 0.0);
-  blank->push_back(dummy);
-  w.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *blank);
 
   ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
   
