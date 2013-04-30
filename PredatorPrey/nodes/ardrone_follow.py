@@ -125,6 +125,7 @@ class ArdroneFollow:
         else:
             dt = ( event.current_real - event.last_real ).to_sec()
 
+        lastDir = cmp(self.current_cmd.angular.z,0)
         self.current_cmd = Twist()
 
         if self.navdata and self.navdata.tags_count == 1:
@@ -134,9 +135,9 @@ class ArdroneFollow:
             self.current_cmd.linear.x = -self.zPid.update( 100, self.last_tags_distance, dt )    
             self.setLedAnim( 3 )
         else:
-            self.setLedAnim( 6 )
-            self.current_cmd.angular.z = 0.01
-        self.goal_vel_pub.publish( self.current_cmd )
+            self.current_cmd.angular.z = 0.01*lastDir
+            #self.setLedAnim( 6 )
+            self.goal_vel_pub.publish( self.current_cmd )
 
     def filter(self,old,new):
         val = old*(1-self.navdata_filter_const) + new*self.navdata_filter_const
@@ -145,7 +146,7 @@ class ArdroneFollow:
         return val
 
 def main():
-    rospy.init_node( 'ardrone_follow' , log_level=rospy.DEBUG)
+    rospy.init_node( 'ardrone_follow' )
     af = ArdroneFollow()
 
     try:
