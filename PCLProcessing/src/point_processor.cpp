@@ -24,47 +24,13 @@
 #include <pcl/filters/extract_indices.h>
 
 
-pcl::ModelCoefficients::Ptr planes[10];
+std::vector<pcl::ModelCoefficients::Ptr> planes;
 unsigned int text_id = 0;
-int num_planes = 0;
 bool firstCloud = true;
-
 std::vector<double> distances;
 
-// boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
+pcl::PointCloud<pcl::PointXYZ>::Ptr outliercloud (new pcl::PointCloud<pcl::PointXYZ>);
 boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-
-
-boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
-{
-  // --------------------------------------------
-  // -----Open 3D viewer and add point cloud-----
-  // --------------------------------------------
-  //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-  viewer->setBackgroundColor (0, 0, 0);
-  viewer->addPointCloud<pcl::PointXYZ> (cloud, "sample cloud");
-  viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
-  viewer->addCoordinateSystem (0.1);
-  viewer->initCameraParameters ();
-  return (viewer);
-}
-
-
-boost::shared_ptr<pcl::visualization::PCLVisualizer> rgbVis (pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud)
-{
-  // --------------------------------------------
-  // -----Open 3D viewer and add point cloud-----
-  // --------------------------------------------
-  //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-  viewer->setBackgroundColor (0, 0, 0);
-  pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud);
-  viewer->addPointCloud<pcl::PointXYZRGB> (cloud, rgb, "sample cloud");
-  viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-  viewer->addCoordinateSystem (0.1);
-  viewer->initCameraParameters ();
-  return (viewer);
-}
-
 
 
 void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,
@@ -100,39 +66,10 @@ void mouseEventOccurred (const pcl::visualization::MouseEvent &event,
   }
 }
 
-boost::shared_ptr<pcl::visualization::PCLVisualizer> interactionCustomizationVis ()
-{
-  boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-  viewer->setBackgroundColor (0, 0, 0);
-  viewer->addCoordinateSystem (1.0);
-
-  viewer->registerKeyboardCallback (keyboardEventOccurred, (void*)&viewer);
-  viewer->registerMouseCallback (mouseEventOccurred, (void*)&viewer);
-
-  return (viewer);
-}
-
-
-// void makeVisualizer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud, pcl::ModelCoefficients::Ptr coefficients)
-// {
-//   //boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
-//   // viewer = simpleVis(cloud);
-//   viewer->addPlane (*coefficients, "plane");
-//   viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, "plane");
-//   visSpinningFlag = true;
-//   dataReadyFlag = false;
-//   while (!viewer->wasStopped () && !dataReadyFlag)
-//   {
-//     viewer->spinOnce (100);
-//     boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-//   }
-//   visSpinningFlag = false;
-// }
-
 void addPlanetoViewer(pcl::ModelCoefficients::Ptr coefficients)
 {
   char buff[7];
-  sprintf(buff, "plane%d", num_planes);
+  sprintf(buff, "plane%d", planes.size());
   viewer->addPlane(*coefficients, buff);
   viewer->setShapeRenderingProperties (pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, buff); 
 }
@@ -146,10 +83,11 @@ void addCloudtoViewer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 
 void updateCloudViewer(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 {
+  // std::cerr << "Update cloud size: " << cloud->points.size() << endl;
   viewer->updatePointCloud<pcl::PointXYZ> (cloud, "cloud");
 }
 
-void findPlaneModels(pcl::PointCloud<pcl::PointXYZ>::Ptr outliercloud)
+void findPlaneModels()
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_f (new pcl::PointCloud<pcl::PointXYZ>), cloud_p (new pcl::PointCloud<pcl::PointXYZ>);
   //////////////////Set plane segmentation parameters//////////////////
@@ -164,113 +102,111 @@ void findPlaneModels(pcl::PointCloud<pcl::PointXYZ>::Ptr outliercloud)
   seg.setMaxIterations (1000);
   seg.setDistanceThreshold (0.1);
 
-
-  
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
   pcl::ExtractIndices<pcl::PointXYZ> extract;
 
-  while (outliercloud->points.size () > 30)
-  {
+  while (outliercloud->points.size () >= 50)
+  { 
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (outliercloud->makeShared());
     seg.segment (*inliers, *coefficients);
-  
-    if (inliers->indices.size () == 0)
-    {
-      PCL_ERROR ("Could not estimate a planar model for the given dataset.");
+    
+    if (inliers->indices.size () <= 50)
+    {//throw away junk planes
+      PCL_ERROR ("Could not estimate a planar model for the given dataset.\n");
+      std::cerr << "The plane that it found contained " << inliers->indices.size() << " points" << std::endl;
       break;
     }
 
-    if (num_planes != 0)
-    {
-      for (int i = 0; i < num_planes; i++)
+    if (planes.size() != 0)
+    {//if there are pre-existing planes
+      int temp = planes.size();
+      for (int i = 0; i < temp; i++)
       {
-        if ( planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2] )
+        if ( (fabs(planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2]) < 0.05) && (fabs(planes[i]->values[3] - coefficients->values[3]) < 0.05))
         {
-          planes[num_planes] = coefficients;
-          num_planes++;
+          std::cerr << "Coefficient Magnitude: " << coefficients->values[0]*coefficients->values[0] + coefficients->values[1]*coefficients->values[1] + coefficients->values[2]*coefficients->values[2] << std::endl;
+          std::cerr << "Numplanes: " << planes.size() << " DotProduct: " << fabs(planes[i]->values[0]*coefficients->values[0] + planes[i]->values[1]*coefficients->values[1] + planes[i]->values[2]*coefficients->values[2]) << " Plane Distance: "<< fabs(planes[i]->values[3] - coefficients->values[3]) <<std::endl;
+          planes.push_back(coefficients);
           addPlanetoViewer(coefficients);
         }
       }
     }
     else
     {
-      planes[num_planes] = coefficients;
-      num_planes++;
+      planes.push_back(coefficients);
       addPlanetoViewer(coefficients);
     }
 
-    
+    //extract the outliers and put them in outliercloud
     extract.setInputCloud (outliercloud);
     extract.setIndices (inliers);
-    extract.setNegative (false);
-    extract.filter (*cloud_p);
-  
-
-    // Create the filtering object
     extract.setNegative (true);
-    extract.filter (*cloud_f);
-    outliercloud.swap (cloud_f);
+    extract.filter (*cloud_p);
+    outliercloud.swap (cloud_p);
   }
-
+  // std::cerr << "Done with findPlaneModels" << std::endl;
   return;
 }
   
 
 
-void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
+// void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
+void findPlaneCallback(const sensor_msgs::PointCloud2ConstPtr& input)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr outliers (new pcl::PointCloud<pcl::PointXYZ>), outliercloud (new pcl::PointCloud<pcl::PointXYZ>);
-
-  if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/master.pcd", *cloud) == -1) //* load the file
+  if (input->data.size() == 0)
   {
-    PCL_ERROR ("Couldn't read file master_pcd.pcd \n");
     return;
   }
 
-  if (num_planes == 0)
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::fromROSMsg (*input, *cloud);
+
+  // pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr outliers (new pcl::PointCloud<pcl::PointXYZ>);
+  std::cerr << "Recieved " << cloud->size() << " point(s) from the ROS message." << std::endl;
+  if (planes.size() == 0)
   {
     *outliercloud += *cloud;
-    findPlaneModels(outliercloud);
+    std::cerr << "Size of outliercloud before findPlaneModels(): " << outliercloud->points.size() << std::endl;
+    findPlaneModels();
+    std::cerr << "Size of outliercloud after findPlaneModels(): " << outliercloud->points.size() << std::endl;
   }
   else
   {
     float distance; 
-    pcl::PointIndices::Ptr outlierindices (new pcl::PointIndices ());
+    pcl::PointIndices::Ptr outlierindices (new pcl::PointIndices());
 
-    for (int point = 0; (point < cloud->points.size()) && (num_planes > 0) ; point++)
+    //Check each point to see if it fits a plane
+    for (int point = 0; (point < cloud->points.size()) && (planes.size() > 0) ; point++)
     {
-      for (int i = 0; i < num_planes; i++)
+      bool isOutlier = true;
+      for (int i = 0; i < planes.size(); i++)
       {
-        distance = fabs(( cloud->points[0].x)*( (planes[i]->values[0])) + ( cloud->points[1].y)*( (planes[i]->values[1])) + ( cloud->points[2].z)*( (planes[i]->values[2])) + ((float) (planes[i]->values[3])));
-        std::cerr << "Distance: " << distance << std::endl;
-        if (distance < 0.1) 
+        distance = fabs(( cloud->points[point].x)*( (planes[i]->values[0])) + ( cloud->points[point].y)*( (planes[i]->values[1])) + ( cloud->points[point].z)*( (planes[i]->values[2])) + ( (planes[i]->values[3])));
+        if (distance < 0.01)
         {
-          outlierindices->indices.push_back(point);
-          break;
+          isOutlier = false;
+          break;//the point fits a plane so discard it
         }
       }
+      if (isOutlier){
+        outlierindices->indices.push_back(point);
+      }
+        
     }
 
     pcl::ExtractIndices<pcl::PointXYZ> extract;
     extract.setInputCloud (cloud);
     extract.setIndices (outlierindices);
-    extract.setNegative (false);
-    extract.filter (*outliercloud);
-
-    std::cerr << "OutlierCloudSize: " << outliercloud->points.size() << std::endl;
-
-    if (pcl::io::loadPCDFile<pcl::PointXYZ> ("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *outliers) == -1) //* load the file
-    {
-      PCL_ERROR ("Couldn't read file outliers.pcd \n");
-    }
+    extract.setNegative (true);
+    extract.filter (*outliers);
 
     *outliercloud += *outliers;
-    findPlaneModels(outliercloud);
+    std::cerr << "OutlierIndicesSize: " << outlierindices->indices.size() << " OutlierCloudSize: " << outliercloud->points.size() << " OutliersSize: " << outliers->points.size() << std::endl;
+    findPlaneModels();
+    std::cerr << "Size of outliercloud after findPlaneModels(): " << outliercloud->points.size() << std::endl;
   }
-
-  
 
   if (firstCloud)
   {
@@ -281,19 +217,6 @@ void findPlaneCallback(const std_msgs::Empty::ConstPtr& msg)
   {
     updateCloudViewer(outliercloud);
   }
-  
-  pcl::PCDWriter writer;
-  
-  if ( writer.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/outliers.pcd", *outliercloud) == -1)
-  {
-    PCL_ERROR("Could not write to file.");
-    return;
-  }
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr emptycloud (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointXYZ dummy (0.0, 0.0, 0.0);
-  emptycloud->push_back(dummy);
-  writer.write("/home/eric/groovy_workspace/Olin_AR_Drone/ARDronePTAM/data/master.pcd", *emptycloud);
 
 }
 
@@ -312,7 +235,8 @@ main (int argc, char** argv)
 {
   ros::init(argc, argv, "point_processor");
   ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("findPlane", 1, findPlaneCallback);
+  // ros::Subscriber sub = n.subscribe("findPlane", 1, findPlaneCallback);
+  ros::Subscriber sub = n.subscribe("vslam/pc2", 1, findPlaneCallback);
   ros::Duration(2).sleep();
   pcl::PCDWriter w;
   pcl::PointCloud<pcl::PointXYZ>::Ptr blank (new pcl::PointCloud<pcl::PointXYZ>);
